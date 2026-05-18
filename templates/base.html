@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FixIt Game{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=99">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=100">
     
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3SCVG3DY0"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -15,6 +14,26 @@
       gtag('config', 'G-C3SCVG3DY0');
     </script>
 
+    <style>
+    .spin-hourglass {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+        margin-right: 6px;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+
+    .delay-note {
+        font-size: 0.7rem;
+        color: #e6b800; /* gold */
+        display: block;
+        margin-top: 2px;
+        line-height: 1.1;
+    }
+    </style>
 </head>
 
 <body>
@@ -22,29 +41,4 @@
         {% block content %}{% endblock %}
     </main>
 </body>
-	
-<style>
-.spin-hourglass {
-    display: inline-block;
-    animation: spin 1s linear infinite;
-    margin-right: 6px;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-
-.delay-note {
-    font-size: 0.7rem;
-    color: #e6b800; /* gold */
-    display: block;
-    margin-top: 2px;
-    line-height: 1.1;
-}
-</style>
-
-</body>
 </html>
-
-
