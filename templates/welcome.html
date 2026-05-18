@@ -4,72 +4,60 @@
 
 {% block content %}
 <style>
-    /* Safely adjusts the top spacing natively without messing up the phone viewport scale */
-    .overall-scale-container {
-        margin-top: -15px; 
-        padding: 0 10px;
+    /* 1. Force the page to treat mobile screens at true 1:1 scale */
+    .mobile-safe-hub {
+        width: 100%;
+        max-width: 400px; /* Locks it to a standard phone width, even on desktop */
+        margin: 0 auto;
+        padding: 10px;
+        box-sizing: border-box;
     }
 
+    /* 2. Completely eliminate horizontal layouts. Everything stays in one single column. */
     .hub-container {
-        display: flex;
-        flex-wrap: wrap; /* 🔑 Allows cards to stack on small screens instead of breaking boundaries */
-        gap: 20px;
-        justify-content: center;
-        align-items: flex-start;
-        padding-top: 10px;
+        display: block; 
+        width: 100%;
     }
 
+    /* 3. Make the cards stack vertically by default with a clear safety cap */
     .game-card {
+        display: block;
         background: #1e293b;
         border: 2px solid #38bdf8;
         border-radius: 12px;
-        padding: 10px;
-        width: 280px; 
+        padding: 15px;
+        margin: 0 auto 20px auto; /* Centers the card and pushes the next one down */
+        width: 100%;        
+        max-width: 280px; /* Prevents it from getting too wide */
         text-align: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
         text-decoration: none;
         color: white;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        box-sizing: border-box;
     }
 
     .game-image {
         width: 100%;
+        max-width: 240px;
         height: auto;
-        display: block;
+        display: inline-block;
         object-fit: contain;
         border-radius: 6px;
         margin-bottom: 8px;
         border: 1px solid rgba(255,255,255,0.1);
     }
 
-    h2 { color: #38bdf8; margin: 5px 0; font-weight: 800; font-size: 1.3rem; }
-    p.card-text { color: #94a3b8; font-size: 0.9rem; line-height: 1.3; }
-
-    /* 📱 Specific adjustments for smaller mobile screens */
-    @media (max-width: 600px) {
-        .hub-container {
-            flex-direction: column; /* Stacks FixIt on top of Music Recall for easy thumb tapping */
-            align-items: center;
-        }
-        .game-card {
-            width: 100%;
-            max-width: 300px; /* Expands nicely to fill mobile widths safely */
-        }
-    }
+    h2 { color: #38bdf8; margin: 5px 0; font-weight: 800; font-size: 1.4rem; }
+    p.card-text { color: #94a3b8; font-size: 0.95rem; line-height: 1.4; }
 </style>
 
-<div class="overall-scale-container">
-    <div style="text-align: center; padding-top: 0; padding-left: 10px; padding-right: 10px;">
-        <h1 style="color: #38bdf8; font-size: 1.4rem; margin-bottom: 5px; line-height: 1.2;">
-            WELCOME TO THE AI-BASED GAME HUB <br> INTENDED TO HELP EDUCATE OR SIMPLY HAVE FUN
+<div class="mobile-safe-hub">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #38bdf8; font-size: 1.3rem; margin-bottom: 8px; line-height: 1.3; font-weight: 800;">
+            WELCOME TO THE AI-BASED GAME HUB
         </h1>
         <p style="color: #475569; font-size: 1.1rem; margin-bottom: 5px; line-height: 1.4;">
-            Select Either 'FixIt' or 'Music Recall' to begin. 
-            <br> 
-            <small style="font-size: 0.85rem; font-style: italic; display: block; margin-top: 4px;">
-                <b>Note: AI generated content is not always perfect.</b>
-            </small>
+            Select a game to begin:
         </p>
     </div>
 
@@ -83,7 +71,7 @@
         <a href="/music_recall" class="game-card">
             <img src="{{ url_for('static', filename='music_thumb.png') }}" class="game-image" alt="Music Recall">
             <h2>MUSIC RECALL</h2>
-            <p class="card-text">Identify legendary tracks. From Benny Goodman to the latest Country and Jazz.</p>
+            <p class="card-text">Identify legendary tracks. From Benny Goodman to Country and Jazz.</p>
         </a>
     </div>
 </div>
