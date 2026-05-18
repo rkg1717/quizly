@@ -1,444 +1,211 @@
-<<<<<<< HEAD
 {
   "asked_questions": [
     {
-      "question": "How can I determine if my existing lawn needs to be reseeded or if it can be rejuvenated with fertilizer and aeration?",
-      "category": "yard",
-      "subtopic": "lawn",
-      "subsubtopic": "new and existing",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:29:35.562775"
-    },
-    {
-      "question": "How can I effectively deter moles and voles from damaging my lawn without harming other wildlife?",
-      "category": "yard",
-      "subtopic": "lawn",
-      "subsubtopic": "moles and voles",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:29:54.121113"
-    },
-    {
-      "question": "My new shrubs are looking wilted and have yellowing leaves. What could be causing this issue?",
-      "category": "yard",
-      "subtopic": "shrubs",
-      "subsubtopic": "new",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:29:58.123245"
-    },
-    {
-      "question": "How can I determine if my existing shrubs are suffering from root rot?",
-      "category": "yard",
-      "subtopic": "shrubs",
-      "subsubtopic": "existing",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:30:15.682391"
-    },
-    {
-      "question": "My shrubs are looking sparse and yellow, despite regular watering. What should I consider when fertilizing them?",
-      "category": "yard",
-      "subtopic": "shrubs",
-      "subsubtopic": "fertilizing",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:30:17.396437"
-    },
-    {
-      "question": "My fruit tree's leaves are turning yellow and dropping prematurely. What could be the cause?",
-      "category": "yard",
-      "subtopic": "trees",
-      "subsubtopic": "fruit",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:31:01.713889"
-    },
-    {
-      "question": "My dishwasher is not draining properly and there is standing water at the bottom after each cycle. What could be causing this issue?",
-      "category": "appliances",
-      "subtopic": "dishwasher",
-      "subsubtopic": "issues",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T14:03:12.184473"
-    },
-    {
-      "question": "My dishwasher is not draining properly and water is pooling at the bottom after each cycle. What should I check first to address this issue?",
-      "category": "appliances",
-      "subtopic": "dishwasher",
-      "subsubtopic": "care",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T14:03:31.334539"
-    },
-    {
-      "question": "My washing machine is vibrating excessively during the spin cycle and occasionally moves across the floor. What is the best long-term solution to fix this issue?",
-      "category": "appliances",
-      "subtopic": "washing machine",
-      "subsubtopic": "issues",
-      "difficulty": "beginner",
-      "timestamp": "2026-05-11T16:02:06.942099"
-    },
-    {
-      "question": "What is the best way to maintain your washing machine to prevent mold and mildew buildup in the drum?",
-      "category": "appliances",
-      "subtopic": "washing machine",
-      "subsubtopic": "care",
-      "difficulty": "beginner",
-      "timestamp": "2026-05-11T16:03:10.678156"
-    },
-    {
-      "question": "My clothes dryer is taking longer than usual to dry clothes and occasionally emits a burning smell. What should I do to resolve these issues effectively?",
-      "category": "appliances",
-      "subtopic": "clothes dryer",
-      "subsubtopic": "issues",
-      "difficulty": "beginner",
-      "timestamp": "2026-05-11T16:03:18.587343"
-    },
-    {
-      "question": "My clothes dryer is taking longer than usual to dry clothes, and I'm noticing a burning smell. What is the best course of action to resolve these issues?",
-      "category": "appliances",
-      "subtopic": "clothes dryer",
-      "subsubtopic": "issues",
-      "difficulty": "beginner",
-      "timestamp": "2026-05-11T16:03:21.097338"
-    },
-    {
-      "question": "What is the best way to maintain the efficiency and safety of a modern clothes dryer?",
-      "category": "appliances",
-      "subtopic": "clothes dryer",
-      "subsubtopic": "care",
-      "difficulty": "beginner",
-      "timestamp": "2026-05-11T16:03:25.100563"
-    },
-    {
-      "question": "In a 3,000 sq ft home with drywall walls that have developed significant cracks due to settling, what is the best long-term solution to repair the walls effectively?",
-      "category": "interior",
-      "subtopic": "walls",
-      "subsubtopic": "material",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T16:37:30.796459"
-    },
-    {
-      "question": "In a 2,500 sq ft home with wood siding that has developed dry rot around windows, what is the most effective long-term solution for repairing the damage and preventing future issues while preparing the area for paint?",
-      "category": "exterior",
-      "subtopic": "dry rot",
-      "subsubtopic": "paint",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T16:48:34.702095"
-    },
-    {
-      "question": "In a modern home with a 2-car garage and a 2020 model vehicle requiring regular maintenance, what is the most effective method for changing the engine oil to ensure optimal performance and longevity of the engine?",
+      "question": "In a suburban home with a modern fuel-injected vehicle that requires synthetic oil, how often should you change the oil to ensure optimal engine performance and longevity?",
       "category": "auto",
       "subtopic": "maintenance",
       "subsubtopic": "oil change",
       "difficulty": "experienced",
-      "timestamp": "2026-05-11T16:54:10.933925"
+      "timestamp": "2026-05-18T08:22:40.757495"
     },
     {
-      "question": "In a 3,000 sq ft home with concrete walls, what is the best WiFi solution to ensure strong and reliable coverage throughout the entire space?",
-      "category": "services",
-      "subtopic": "WIFI",
-      "subsubtopic": "equipment",
+      "question": "In a 2015 Honda Accord that is primarily driven in stop-and-go city traffic, what is the best maintenance practice to ensure the longevity and effectiveness of the brake system?",
+      "category": "auto",
+      "subtopic": "maintenance",
+      "subsubtopic": "brakes",
       "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:21:58.951172"
+      "timestamp": "2026-05-18T08:23:25.216211"
     },
     {
-      "question": "In a 2,500 sq ft single-story home with a flat roof that has developed multiple leaks over the past few years, what is the best long-term solution for roof replacement that adheres to modern industry best practices?",
-      "category": "exterior",
-      "subtopic": "roof",
-      "subsubtopic": "replacement",
+      "question": "In a 2020 model SUV experiencing persistent rattles from the rear suspension while driving over bumps, what is the most effective long-term maintenance solution to address the issue, given that the vehicle is primarily used for family transport and occasionally carries heavy loads?",
+      "category": "auto",
+      "subtopic": "maintenance",
+      "subsubtopic": "rattles",
       "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:24:12.697309"
+      "timestamp": "2026-05-18T08:23:35.450695"
     },
     {
-      "question": "In a 2,500 sq ft home with high humidity areas (like bathrooms and kitchens), what type of paint should you use for the interior walls to ensure durability and mold resistance?",
-      "category": "interior",
-      "subtopic": "painting",
-      "subsubtopic": "paints",
+      "question": "In a scenario where you are detailing a vehicle regularly exposed to harsh weather conditions and road grime, which washing method would provide the best long-term protection and cleanliness for the car's exterior?",
+      "category": "auto",
+      "subtopic": "detailing",
+      "subsubtopic": "washing",
       "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:25:10.475702"
+      "timestamp": "2026-05-18T08:24:24.007655"
     },
     {
-      "question": "In a 2,500 sq ft home with textured drywall that has been previously painted with a semi-gloss finish, what is the best technique for repainting the interior walls to ensure a smooth and durable finish?",
-      "category": "interior",
-      "subtopic": "painting",
-      "subsubtopic": "technique",
+      "question": "In a scenario where you own a 2018 black SUV that has been exposed to the elements for several years, resulting in oxidation and a dull finish, what is the best method for detailing and waxing the vehicle to restore its shine and protect the paint long-term?",
+      "category": "auto",
+      "subtopic": "detailing",
+      "subsubtopic": "waxing",
       "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:25:13.594647"
+      "timestamp": "2026-05-18T08:24:27.780259"
     },
     {
-      "question": "In a 3,000 sq ft home with concrete walls and limited ductwork, the HVAC system is failing to maintain a comfortable temperature, leading to hot and cold spots throughout the house. What is the best long-term solution to address the issues with the HVAC system?",
-      "category": "appliances",
-      "subtopic": "HVAC",
-      "subsubtopic": "issues",
+      "question": "In a 3,000 sq ft home with a clay soil foundation, what is the best approach to establish a new lawn while ensuring proper drainage and long-term health of the grass?",
+      "category": "yard",
+      "subtopic": "lawn",
+      "subsubtopic": "new and existing",
       "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:29:07.308997"
+      "timestamp": "2026-05-18T08:32:06.882283"
     },
     {
-      "question": "In a 2,500 sq ft home with a central HVAC system that is experiencing uneven temperature distribution and increased energy bills, what is the best long-term solution for improving system efficiency and comfort?",
-      "category": "appliances",
-      "subtopic": "HVAC",
-      "subsubtopic": "care",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:29:41.913993"
-    },
-    {
-      "question": "In a modern home with a stainless steel refrigerator that is not cooling effectively, what is the best long-term solution to address the cooling issues while ensuring energy efficiency?",
-      "category": "appliances",
-      "subtopic": "refrigerator",
-      "subsubtopic": "issues",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:30:00.840806"
-    },
-    {
-      "question": "In a modern kitchen with a high-efficiency refrigerator, what is the best way to maintain optimal cooling performance and energy efficiency over time?",
-      "category": "appliances",
-      "subtopic": "refrigerator",
-      "subsubtopic": "care",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:30:35.682829"
-    },
-    {
-      "question": "In a modern kitchen with a high-efficiency gas range, you notice that the oven is not heating properly, and the flame is uneven. After checking the gas supply and ensuring the igniter works, what should be the next step to effectively resolve the issue?",
-      "category": "appliances",
-      "subtopic": "kitchen",
-      "subsubtopic": "stove or ovens or microwave",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:30:45.047946"
-    },
-    {
-      "question": "In a 2,500 sq ft home with a modern open-concept kitchen that frequently uses high-powered appliances (like a dishwasher, microwave, and refrigerator) but only has a limited number of outlets installed, what is the best long-term solution to ensure adequate power supply without overloading circuits?",
-      "category": "appliances",
-      "subtopic": "kitchen",
-      "subsubtopic": "outlets",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:31:01.382059"
-    },
-    {
-      "question": "In a modern kitchen with limited counter space and a built-in gas line, how should you best address a persistent problem of uneven heating in your small countertop gas stove?",
-      "category": "appliances",
-      "subtopic": "small",
-      "subsubtopic": "cooking",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:31:07.710140"
-    },
-    {
-      "question": "In a modern apartment with limited kitchen space and a compact electric countertop heater, what is the best method to ensure efficient heating while maintaining safety and compliance with current standards?",
-      "category": "appliances",
-      "subtopic": "small",
-      "subsubtopic": "heating",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:31:49.129104"
-    },
-    {
-      "question": "In a small kitchen of a 600 sq ft apartment with limited ventilation and high humidity, the built-in refrigerator is struggling to maintain a consistent temperature, leading to spoiled food. What is the best long-term solution to improve the cooling efficiency of the refrigerator?",
-      "category": "appliances",
-      "subtopic": "small",
-      "subsubtopic": "cooling",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:31:55.708733"
-    },
-    {
-      "question": "In a 2,000 sq ft home with concrete walls, your smart TV frequently loses Wi-Fi connection, making streaming difficult. What is the best long-term solution to ensure a stable and strong internet connection throughout your home?",
-      "category": "appliances",
-      "subtopic": "small",
-      "subsubtopic": "entertainment",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:32:52.265810"
-    },
-    {
-      "question": "After several uses, the burners on my outdoor gas BBQ grill are not igniting consistently, and the flame is uneven. I live in a 2,500 sq ft home with a stone patio, and the grill is exposed to the elements. What is the best long-term solution to ensure optimal performance and safety?",
-      "category": "appliances",
-      "subtopic": "outdoor",
-      "subsubtopic": "BBQ",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-11T17:33:01.956086"
-    },
-    {
-      "question": "In a 3,000 sq ft home with concrete walls, you notice that some electrical outlets are not working. You suspect a wiring issue. What is the best way to test the outlets and ensure a long-term solution?",
+      "question": "In a 3,000 sq ft home with concrete walls and multiple outlets showing intermittent power, what is the most effective method to test and diagnose these outlets for a long-term solution?",
       "category": "electrical",
       "subtopic": "outlets",
       "subsubtopic": "test",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:32:34.508296"
+      "timestamp": "2026-05-18T08:32:38.286477"
     },
     {
-      "question": "In a 3,000 sq ft home with concrete walls, you notice that several electrical outlets are not providing power. After checking the circuit breaker, it appears to be functioning correctly. What is the best long-term solution for diagnosing and repairing the outlets while ensuring they are safe and compliant with current voltage standards?",
-      "category": "electrical",
-      "subtopic": "outlets",
-      "subsubtopic": "voltage",
+      "question": "In a 2,500 sq ft home with a small backyard pond, you want to safely store your inflatable kayak to protect it from UV damage and water exposure. What is the best long-term solution for kayak storage?",
+      "category": "recreation",
+      "subtopic": "kayaks",
+      "subsubtopic": "safety",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:33:16.850538"
+      "timestamp": "2026-05-18T08:32:45.124155"
     },
     {
-      "question": "In a 3,000 sq ft home with concrete walls and existing single-pole light switches that frequently malfunction, what is the best approach to replace these switches for improved reliability and functionality?",
-      "category": "electrical",
-      "subtopic": "switches",
-      "subsubtopic": "replace",
+      "question": "My WiFi signal is weak in the far corners of my home, and I can't run new cables. What’s the best long-term solution for improving coverage?",
+      "category": "services",
+      "subtopic": "WIFI",
+      "subsubtopic": "equipment",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:33:23.263434"
+      "timestamp": "2026-05-18T10:35:21.013421"
     },
     {
-      "question": "In a 2,500 sq ft home with drywall walls and a mix of LED and incandescent lighting, you're experiencing flickering lights and inconsistent operation of your wall switches. You need to replace the faulty switches. Which of the following options is the best long-term solution for your electrical system?",
-      "category": "electrical",
-      "subtopic": "switches",
-      "subsubtopic": "replace",
+      "question": "How can I effectively repair a large hole in a drywall wall in my living room without compromising structural integrity, given that I have limited tools and materials?",
+      "category": "interior",
+      "subtopic": "walls",
+      "subsubtopic": "material",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:33:26.013436"
+      "timestamp": "2026-05-18T10:36:05.083424"
     },
     {
-      "question": "In a 3,000 sq ft home with concrete walls, you are experiencing inconsistent lighting in various rooms, and you want to replace the existing wall switches to improve reliability and performance. Which type of wall switch should you install for optimal long-term performance and compatibility with modern smart home systems?",
-      "category": "electrical",
-      "subtopic": "switches",
-      "subsubtopic": "types",
+      "question": "My ISP's signal is weak in my home office, and I'm considering a WiFi extender. Should I go with that or is there a better long-term solution?",
+      "category": "services",
+      "subtopic": "WIFI",
+      "subsubtopic": "ISP",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:33:29.172346"
+      "timestamp": "2026-05-18T10:36:29.019335"
     },
     {
-      "question": "In a 3,000 sq ft home with concrete walls, you want to add new wiring for additional outlets in a home office while ensuring safety and compliance with modern electrical standards. What is the best approach to accomplish this?",
-      "category": "electrical",
-      "subtopic": "wiring",
-      "subsubtopic": "new",
+      "question": "My downloads are slow despite a strong Wi-Fi signal in a two-story house. What’s the best solution to improve my Wi-Fi speed for larger files?",
+      "category": "services",
+      "subtopic": "WIFI",
+      "subsubtopic": "downloads",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:34:31.157136"
+      "timestamp": "2026-05-18T10:36:32.569490"
     },
     {
-      "question": "In a 2,500 sq ft home with a finished basement and a mix of old and new wiring, you notice that the fuse for the basement lights frequently trips when multiple appliances are used simultaneously. What is the most effective long-term solution to address this issue?",
-      "category": "electrical",
-      "subtopic": "fuses",
-      "subsubtopic": "tripped",
+      "question": "I need to repaint my living room, but it has a high moisture level. Which paint type is best for long-lasting results in this humid environment?",
+      "category": "interior",
+      "subtopic": "painting",
+      "subsubtopic": "paints",
       "difficulty": "experienced",
-      "timestamp": "2026-05-12T10:34:34.075281"
+      "timestamp": "2026-05-18T10:36:55.018165"
+    },
+    {
+      "question": "What is the best technique for painting a textured wall while minimizing paint buildup in the crevices?",
+      "category": "interior",
+      "subtopic": "painting",
+      "subsubtopic": "technique",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T10:36:58.672767"
+    },
+    {
+      "question": "How can I effectively set up a reliable streaming service in my living room with a weak Wi-Fi signal due to thick walls?",
+      "category": "services",
+      "subtopic": "streaming",
+      "subsubtopic": "setup",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T10:37:32.238227"
+    },
+    {
+      "question": "My streaming service buffers frequently on multiple devices. I have a 100 Mbps internet plan but use Wi-Fi throughout my home. What’s the best long-term solution?",
+      "category": "services",
+      "subtopic": "streaming",
+      "subsubtopic": "problems",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T10:37:35.861214"
+    },
+    {
+      "question": "My dishwasher isn't draining properly after a cycle, and I’ve already tried cleaning the filter. What should I do next?",
+      "category": "appliances",
+      "subtopic": "dishwasher",
+      "subsubtopic": "issues",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T10:39:03.208353"
+    },
+    {
+      "question": "How can I effectively maintain my dishwasher, which is used daily and has a persistent odor, without resorting to harsh chemicals?",
+      "category": "appliances",
+      "subtopic": "dishwasher",
+      "subsubtopic": "care",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T10:39:29.984591"
+    },
+    {
+      "question": "My front-loading washing machine isn't draining properly and makes a grinding noise. What should I do to fix this issue effectively?",
+      "category": "appliances",
+      "subtopic": "washing machine",
+      "subsubtopic": "issues",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T10:39:33.413145"
+    },
+    {
+      "question": "My family wants easy dinners but we have a small kitchen with limited storage. What’s the best way to organize my cooking tools for efficiency?",
+      "category": "cooking",
+      "subtopic": "dinners",
+      "subsubtopic": "easy",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T11:11:44.557214"
+    },
+    {
+      "question": "How can I effectively remove wine stains from my dining table without damaging the finish, considering I have a wooden surface and limited cleaning supplies?",
+      "category": "cooking",
+      "subtopic": "dinners",
+      "subsubtopic": "wine",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-18T11:12:05.218981"
     }
   ],
   "used_subtopics": {
-    "yard": [
-      "lawn|new and existing",
-      "lawn|moles and voles",
-      "shrubs|new",
-      "shrubs|existing",
-      "shrubs|fertilizing",
-      "trees|fruit"
+    "auto": [
+      "maintenance|oil change",
+      "maintenance|brakes",
+      "maintenance|rattles",
+      "detailing|washing",
+      "detailing|waxing"
     ],
-    "appliances": [
-      "dishwasher|issues",
-      "dishwasher|care",
-      "washing machine|issues",
-      "washing machine|care",
-      "clothes dryer|issues",
-      "clothes dryer|care",
-      "HVAC|issues",
-      "HVAC|care",
-      "refrigerator|issues",
-      "refrigerator|care",
-      "kitchen|stove or ovens or microwave",
-      "kitchen|outlets",
-      "small|cooking",
-      "small|heating",
-      "small|cooling",
-      "small|entertainment",
-      "outdoor|BBQ"
+    "yard": [
+      "lawn|new and existing"
+    ],
+    "electrical": [
+      "outlets|test"
+    ],
+    "recreation": [
+      "kayaks|safety"
+    ],
+    "services": [
+      "WIFI|equipment",
+      "WIFI|ISP",
+      "WIFI|downloads",
+      "streaming|setup",
+      "streaming|problems"
     ],
     "interior": [
       "walls|material",
       "painting|paints",
       "painting|technique"
     ],
-    "exterior": [
-      "dry rot|paint",
-      "roof|replacement"
-    ],
-    "auto": [
-      "maintenance|oil change"
-    ],
-    "services": [
-      "WIFI|equipment"
-    ],
-    "electrical": [
-      "outlets|test",
-      "outlets|voltage",
-      "switches|replace",
-      "switches|types",
-      "wiring|new",
-      "fuses|tripped"
-    ]
-  }
-=======
-{
-  "asked_questions": [
-    {
-      "question": "How can I determine if my existing lawn needs to be reseeded or if it can be rejuvenated with fertilizer and aeration?",
-      "category": "yard",
-      "subtopic": "lawn",
-      "subsubtopic": "new and existing",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:29:35.562775"
-    },
-    {
-      "question": "How can I effectively deter moles and voles from damaging my lawn without harming other wildlife?",
-      "category": "yard",
-      "subtopic": "lawn",
-      "subsubtopic": "moles and voles",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:29:54.121113"
-    },
-    {
-      "question": "My new shrubs are looking wilted and have yellowing leaves. What could be causing this issue?",
-      "category": "yard",
-      "subtopic": "shrubs",
-      "subsubtopic": "new",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:29:58.123245"
-    },
-    {
-      "question": "How can I determine if my existing shrubs are suffering from root rot?",
-      "category": "yard",
-      "subtopic": "shrubs",
-      "subsubtopic": "existing",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:30:15.682391"
-    },
-    {
-      "question": "My shrubs are looking sparse and yellow, despite regular watering. What should I consider when fertilizing them?",
-      "category": "yard",
-      "subtopic": "shrubs",
-      "subsubtopic": "fertilizing",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:30:17.396437"
-    },
-    {
-      "question": "My fruit tree's leaves are turning yellow and dropping prematurely. What could be the cause?",
-      "category": "yard",
-      "subtopic": "trees",
-      "subsubtopic": "fruit",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T11:31:01.713889"
-    },
-    {
-      "question": "My dishwasher is not draining properly and there is standing water at the bottom after each cycle. What could be causing this issue?",
-      "category": "appliances",
-      "subtopic": "dishwasher",
-      "subsubtopic": "issues",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T14:03:12.184473"
-    },
-    {
-      "question": "My dishwasher is not draining properly and water is pooling at the bottom after each cycle. What should I check first to address this issue?",
-      "category": "appliances",
-      "subtopic": "dishwasher",
-      "subsubtopic": "care",
-      "difficulty": "experienced",
-      "timestamp": "2026-05-03T14:03:31.334539"
-    }
-  ],
-  "used_subtopics": {
-    "yard": [
-      "lawn|new and existing",
-      "lawn|moles and voles",
-      "shrubs|new",
-      "shrubs|existing",
-      "shrubs|fertilizing",
-      "trees|fruit"
-    ],
     "appliances": [
       "dishwasher|issues",
-      "dishwasher|care"
+      "dishwasher|care",
+      "washing machine|issues"
+    ],
+    "cooking": [
+      "dinners|easy",
+      "dinners|wine"
     ]
   }
->>>>>>> 7a1bdb191cb48002f716916db9c9a0017974da64
 }

@@ -1,50 +1,65 @@
-from flask import Flask, render_template, send_file, request, redirect, url_for, session, flash, jsonify, send_from_directory
-import nltk
+# 1. Flask & Web Framework Imports
+from flask import (
+    Flask, 
+    render_template, 
+    send_file, 
+    request, 
+    redirect, 
+    url_for, 
+    session, 
+    flash, 
+    jsonify, 
+    send_from_directory
+)
+
+# 2. Third-Party Packages
 from nltk.corpus import stopwords
+from openai import OpenAI
+from pydub import AudioSegment
+import nltk
+import requests
+
+# 3. Local Utilities
 from text_utils import clean_text, fuzzy_match
-import copy, re, random, requests, sys, os, json, socket, threading, webbrowser
+
+# 4. Standard Built-in Python Libraries
 from collections import defaultdict
-from pathlib import Path
 from datetime import datetime
 from difflib import SequenceMatcher
+import copy
 import hashlib
-from pydub import AudioSegment
 import io
-from openai import OpenAI
+import json
+import os
+import random
+import re
+import socket
+import sys
 
 random.seed()
 
-# 1. Define the path helper first
+# --- ADD THESE THREE LINES HERE ---
+import queue
+import threading
+QUESTION_CACHE = queue.Queue(maxsize=2)
+# ----------------------------------
+ 
 def resource_path(relative_path):
-    import os, sys
-    base = getattr(sys, '_MEIPASS', os.path.abspath("."))
-    return os.path.join(base, relative_path)
+    """ Get absolute path to resource, working for dev, Render, and PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        # Fallback to the directory containing this script, or current directory if unavailable
+        base_path = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()
+    
+    return os.path.join(base_path, relative_path)
 
-# 2. Initialize the app with the paths
+# Initialize the app with the unified paths
 app = Flask(__name__, 
             template_folder=resource_path("templates"), 
             static_folder=resource_path("static"))
 
-# 3. Set the security key
 app.secret_key = "supersecret"
-            
-def resource_path(relative_path):
-    """ Get absolute path to resource for dev and Render """
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
-    
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        if '__file__' in globals():
-            base_path = os.path.abspath(os.path.dirname(__file__))
-        else:
-            base_path = os.getcwd()
-    return os.path.join(base_path, relative_path)
 
 def get_questions_history_path():
     return resource_path("questions_history.json")
@@ -82,7 +97,6 @@ def add_to_history(question_text, category, subtopic, subsubtopic, difficulty):
     if len(history["asked_questions"]) > 150:
         history["asked_questions"] = history["asked_questions"][-150:]
     
-    save_questions_history(history)
     save_questions_history(history)
 
 def last_half(text):
@@ -589,19 +603,21 @@ def get_openai_question_answer(prompt: str, question_type: str = "multiple_choic
     client = OpenAI(api_key=api_key, timeout=12.0)
 
     try:
-            print(f"DEBUG: Calling OpenAI (Model: gpt-4o-mini, Temp: {temperature})")
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "system", "content": "You are a home repair expert."},
-                          {"role": "user", "content": prompt}],
-                max_tokens=500,
-                temperature=temperature,
-                top_p=0.9
-            )
+        print(f"DEBUG: Calling OpenAI (Model: gpt-4o-mini, Temp: {temperature})")
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You are a home repair expert."},
+                      {"role": "user", "content": prompt}],
+            max_tokens=500,
+            temperature=temperature,
+            top_p=0.9
+        )
     except Exception as e:
         print(f"ERROR: OpenAI call failed: {e}")
-        response = None
+        return None
 
+    # Process successful response outside of the exception block
+    try:
         text = response.choices[0].message.content.strip()
         print(f"\n--- AI RAW RESPONSE ---\n{text}\n-----------------------")
 
@@ -652,16 +668,45 @@ def get_openai_question_answer(prompt: str, question_type: str = "multiple_choic
         return result
 
     except Exception as e:
-        print(f"⚠️ OpenAI Call Error: {e}")
+        print(f"⚠️ OpenAI Response Processing Error: {e}")
         return None
+
+def refill_question_cache_worker(category, difficulty, base_prompt, question_type):
+    """Background worker that calls OpenAI to replenish the cache."""
+    print("DEBUG [Cache]: Background worker checking cache status...")
+    if not QUESTION_CACHE.full():
+        print("DEBUG [Cache]: Cache has space. Fetching a new question from OpenAI...")
+        qa = get_openai_question_answer(base_prompt.strip(), question_type, temperature=0.8)
         
+        if qa and "correct_answer" in qa:
+            # --- Normalize Answer ---
+            raw_ans = str(qa["correct_answer"]).strip().upper()
+            if question_type == "multiple_choice":
+                match = re.match(r"^[A-D]", raw_ans)
+                if match:
+                    qa["correct_answer"] = match.group(0)
+            else:
+                if raw_ans in ("YES", "NO"):
+                    qa["correct_answer"] = raw_ans
+
+            # --- Structural Validation & Fuzzy Check ---
+            if not is_duplicate_fuzzy(qa["question"], category, threshold=0.70):
+                if validate_question_structure(qa, question_type):
+                    if question_type == "multiple_choice":
+                        qa = shuffle_multiple_choice_options(qa)
+                    
+                    # Package it into your exact game format tuple
+                    question_data = [(qa["question"], qa.get("options", []), qa["correct_answer"], question_type, 1)]
+                    
+                    # Put it in the queue container
+                    QUESTION_CACHE.put((question_data, category, difficulty))
+                    print("DEBUG [Cache]: Successfully cached a new dynamic question.")
+                    
 def generate_question(category, difficulty, subtopic=None, subsubtopic=None, source="openai"):
     """
-    SINGLE UNIFIED GENERATOR
-    Levels: 'beginner', 'experienced'
-    Features: 0.70 Fuzzy Threshold, 0.8 Temperature, Subtopic Rotation
+    SINGLE UNIFIED GENERATOR WITH INSTANT PRE-CACHING
     """
-    # 1. Subtopic rotation
+    # 1. Subtopic rotation setup
     if not subtopic or not subsubtopic:
         subtopic, subsubtopic = get_next_unused_subtopic(category)
 
@@ -669,86 +714,65 @@ def generate_question(category, difficulty, subtopic=None, subsubtopic=None, sou
         pairs = get_subtopic_pairs(category)
         subtopic, subsubtopic = random.choice(pairs) if pairs else ("general", "general")
 
-    # 2. Difficulty Logic
+    # 2. Determine Question Type
     last_qt = session.get("last_question_type")
     if difficulty == "beginner":
-        # Beginners get 20% Yes/No, but never twice in a row
-        if last_qt == "yes_no":
-            question_type = "multiple_choice"
-        else:
-            question_type = "yes_no" if random.random() < 0.2 else "multiple_choice"
+        question_type = "multiple_choice" if last_qt == "yes_no" else ("yes_no" if random.random() < 0.2 else "multiple_choice")
     else:
-        # Experienced is ALWAYS Multiple Choice
         question_type = "multiple_choice"
 
     # 3. Build Prompt
-
-    # Inside generate_question()
     base_prompt = f"""
-    Generate ONE clear, practical home-repair question about {category}, focused on the subtopic "{subtopic}" and detail "{subsubtopic}".
+Generate ONE clear, practical home-repair question about {category}, focused on the subtopic "{subtopic}" and detail "{subsubtopic}".
 
 QUALITY REQUIREMENTS:
-- Prioritize modern industry best practices (e.g., Mesh over Extenders, PEX over PVC for hot water).
-- Ensure the 'Correct Answer' is the most effective long-term solution, not just the cheapest. 
-- If there are multiple answers, provide an explanation as to which is the BEST answer.
-- Avoid vague or outdated equipment recommendations."""
+- Prioritize modern industry best practices.
+- Ensure the 'Correct Answer' is the most effective long-term solution. 
+- Keep the question under 45 words."""
 
     if question_type == "yes_no":
         base_prompt += "\nFormat:\nQuestion: [question]\nCorrect Answer: YES or NO"
     else: 
         if difficulty == "experienced":
-            base_prompt += """
-\nEXPERIENCED REQUIREMENTS:
-- Include a scenario with specific constraints (e.g., 'In a 3,000 sq ft home with concrete walls...').
-- The correct answer must be the technically superior choice.
-- Distractors (wrong answers) should include common but less effective DIY 'band-aid' fixes."""
-    base_prompt += "\nMULTIPLE-CHOICE FORMAT:\nQuestion: [question]\nA) [opt]\nB) [opt]\nC) [opt]\nD) [opt]\nCorrect Answer: [A/B/C/D]"
+            base_prompt += "\nEXPERIENCED REQUIREMENTS:\n- Include a scenario with specific constraints.\n- Distractors should include common less effective DIY fixes."
+        base_prompt += "\nMULTIPLE-CHOICE FORMAT:\nQuestion: [question]\nA) [opt]\nB) [opt]\nC) [opt]\nD) [opt]\nCorrect Answer: [A/B/C/D]"
 
-    # 4. Generation Loop
+    # 4. Spin up background caching thread for the NEXT round early
+    threading.Thread(
+        target=refill_question_cache_worker, 
+        args=(category, difficulty, base_prompt, question_type), 
+        daemon=True
+    ).start()
+
+    # 5. Try to serve from the instant cache first
+    try:
+        # Check if cache contains a matching category/difficulty question
+        if not QUESTION_CACHE.empty():
+            cached_question, cached_cat, cached_diff = QUESTION_CACHE.get_nowait()
+            if cached_cat == category and cached_diff == difficulty:
+                print("DEBUG [Cache]: Serving question INSTANTLY from background cache pool!")
+                session["last_question_type"] = cached_question[0][3]
+                return cached_question
+    except queue.Empty:
+        pass
+
+    # 6. Safety Fallback: If cache wasn't ready yet, do a fast fallback loop
+    print("DEBUG [Cache]: Cache empty or mismatched. Fetching real-time alternative...")
     attempts = 0
-    while attempts < 3:
-        # We pass 0.8 temperature here
+    while attempts < 2:
         qa = get_openai_question_answer(base_prompt.strip(), question_type, temperature=0.8)
-
-        if not qa or "correct_answer" not in qa:
-            attempts += 1
-            continue
-
-        # --- Normalize Answer ---
-        raw_ans = str(qa["correct_answer"]).strip().upper()
-        if question_type == "multiple_choice":
-            match = re.match(r"^[A-D]", raw_ans)
-            if not match: 
-                attempts += 1
-                continue
-            qa["correct_answer"] = match.group(0)
-        else:
-            if raw_ans not in ("YES", "NO"):
-                attempts += 1
-                continue
-            qa["correct_answer"] = raw_ans
-
-        # --- Fuzzy Check (0.70) ---
-        if is_duplicate_fuzzy(qa["question"], category, threshold=0.70):
-            print(f"DEBUG: Similarity too high in {category}, retrying...")
-            attempts += 1
-            continue
-
-        # --- Success ---
-        if validate_question_structure(qa, question_type):
-            if question_type == "multiple_choice":
-                qa = shuffle_multiple_choice_options(qa)
-
-            add_to_history(qa["question"], category, subtopic, subsubtopic, difficulty)
-            mark_subtopic_as_used(category, subtopic, subsubtopic)
-            session["last_question_type"] = question_type
-            
-            return [(qa["question"], qa.get("options", []), qa["correct_answer"], question_type, 1)]
-        
+        if qa and "correct_answer" in qa:
+            if validate_question_structure(qa, question_type):
+                if question_type == "multiple_choice":
+                    qa = shuffle_multiple_choice_options(qa)
+                add_to_history(qa["question"], category, subtopic, subsubtopic, difficulty)
+                mark_subtopic_as_used(category, subtopic, subsubtopic)
+                session["last_question_type"] = question_type
+                return [(qa["question"], qa.get("options", []), qa["correct_answer"], question_type, 1)]
         attempts += 1
 
     return create_fallback_question()
-    
+
 def get_openai_expanded_answer(question: str, correct_answer: str = None) -> dict:
     api_key = get_openai_api_key()
     if not api_key:
