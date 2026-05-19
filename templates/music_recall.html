@@ -4,16 +4,20 @@
 
 {% block content %}
 <style>
-    html, body {
+html, body {
         -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;    /* 🔑 Add: Safety for alternative engine branches */
         text-size-adjust: 100%;
         background-color: #0f172a; 
         color: #f8fafc; 
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         margin: 0;
         padding: 0;
+        
+        /* 🔑 Add: Hard-lock the container so Chrome cannot stretch the canvas layout */
         width: 100%;
         max-width: 100vw;
+        min-width: 100vw;               
         overflow-x: hidden;
     }
 
@@ -183,28 +187,28 @@
         </div>
     </div>
     
-    <div class="genre-nav" id="genre-nav">
-        <a href="#" class="genre-link active" onclick="setGenre(event, this, 'Country')">COUNTRY</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Rock')">ROCK</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Jazz')">JAZZ</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'R&B')">R&B</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Latin')">LATIN</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Folk')">FOLK</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Pop')">POP</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Hip-Hop')">HIP-HOP</a>
-        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Classical')">CLASSICAL</a>
-    </div>
+		<div class="genre-nav" id="genre-nav">
+		<a href="#" class="genre-link active" onclick="setGenre(event, this, 'Country'); return false;">COUNTRY</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Rock'); return false;">ROCK</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Jazz'); return false;">JAZZ</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'R&B'); return false;">R&B</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Latin'); return false;">LATIN</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Folk'); return false;">FOLK</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Pop'); return false;">POP</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Hip-Hop'); return false;">HIP-HOP</a>
+		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Classical'); return false;">CLASSICAL</a>
+	</div>
 
-    <div class="genre-nav" id="decade-nav">
-        <a href="#" class="genre-link active" onclick="setDecade(event, this, 'Random')">RANDOM</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '1950s')">50s</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '1960s')">60s</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '1970s')">70s</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '1980s')">80s</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '1990s')">90s</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '2000s')">00s</a>
-        <a href="#" class="genre-link" onclick="setDecade(event, this, '2010s')">10s</a>
-    </div>
+	<div class="genre-nav" id="decade-nav">
+		<a href="#" class="genre-link active" onclick="setDecade(event, this, 'Random'); return false;">RANDOM</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '1950s'); return false;">50s</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '1960s'); return false;">60s</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '1970s'); return false;">70s</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '1980s'); return false;">80s</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '1990s'); return false;">90s</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '2000s'); return false;">00s</a>
+		<a href="#" class="genre-link" onclick="setDecade(event, this, '2010s'); return false;">10s</a>
+</div>
 
     <div id="game-board">
         <div class="reveal-box">
@@ -323,7 +327,10 @@
     }
 
     async function loadNewSong() {
-        document.getElementById('feedback-text').innerText = "";
+		const feedback = document.getElementById('feedback-text');
+		feedback.style.color = "";     // 🔑 Resets to default white for the next round
+        feedback.style.fontSize = "";  // 🔑 Resets to standard 2rem size
+		
         audioClueUsed = false;
         currentStage = 1;
         pointsPossible = 100;
@@ -435,18 +442,23 @@
         document.getElementById('player-streak').innerText = streak;
     }
 
-    function giveUp() {
-        turnOver = true;      
-        pointsPossible = 0;   
-        streak = 0;           
-        
-        document.getElementById('pts-display').innerText = "0";
-        document.getElementById('player-streak').innerText = streak;
-        document.getElementById('feedback-text').innerText = "🏳️ Surrendered.";
-        
-        showFullReveal();
-        if (audioPlayer) audioPlayer.pause();
-    }
+	function giveUp() {
+			turnOver = true;      
+			pointsPossible = 0;   
+			streak = 0;           
+			
+			document.getElementById('pts-display').innerText = "0";
+			document.getElementById('player-streak').innerText = streak;
+			
+			// Target the feedback element, update the text, and apply the soft red style
+			const feedback = document.getElementById('feedback-text');
+			feedback.innerText = "🏳️ Surrendered.";
+			feedback.style.color = "#fca5a5";    /* 🔑 A clean, soft/light pastel red */
+			feedback.style.fontSize = "1.4rem";  /* 🔑 Drops it down from the default 2rem size */
+			
+			showFullReveal();
+			if (audioPlayer) audioPlayer.pause();
+		}
 
     function showFullReveal() {
         ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
