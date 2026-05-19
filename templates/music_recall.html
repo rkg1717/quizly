@@ -4,7 +4,6 @@
 
 {% block content %}
 <style>
-    /* 🔑 FORCE mobile layout engine overrides to disable automatic Chrome zoom-out */
     html, body {
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
@@ -34,7 +33,6 @@
         min-height: 1.5rem; 
     }
 
-    /* 📱 Updated wrapper to natively conform to the physical glass boundaries of phones */
     .music-recall-container { 
         max-width: 600px; 
         width: 100%;
@@ -169,7 +167,6 @@
     .hidden { display: none; opacity: 0; }
     #answer-box { border-left: 4px solid var(--cobalt); background: rgba(56, 189, 248, 0.05); }
     
-    /* Small touch devices adjustments */
     @media (max-width: 480px) {
         .music-recall-container { padding: 15px 10px 20px 10px; }
         .reveal-box { padding: 16px; }
@@ -195,7 +192,7 @@
         <a href="#" class="genre-link" onclick="setGenre(event, this, 'Folk')">FOLK</a>
         <a href="#" class="genre-link" onclick="setGenre(event, this, 'Pop')">POP</a>
         <a href="#" class="genre-link" onclick="setGenre(event, this, 'Hip-Hop')">HIP-HOP</a>
-        <a href="#" class="genre-link" onclick="setClassical(event, this, 'Classical')">CLASSICAL</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Classical')">CLASSICAL</a>
     </div>
 
     <div class="genre-nav" id="decade-nav">
@@ -226,13 +223,13 @@
         </div>
 
         <div id="audioClueContainer" style="display:none; margin-top: 15px;">
-            <button onclick="playAudioClue()" class="clue-button">
+            <button onclick="playAudioClue()" class="btn-primary">
                 NEED AN AUDIO SNIPPET CLUE (25 PTS)?
             </button>
         </div>
 
         <div id="replayContainer" style="display:none; margin-top:10px;">
-            <button onclick="replayAudio()" class="clue-button">
+            <button onclick="replayAudio()" class="btn-primary" style="background: #475569; color: white;">
                 🔁 Replay Audio
             </button>
         </div>
@@ -283,9 +280,16 @@
                 I GIVE UP (0 PTS)
             </button>
 
-            <button id="next-btn" onclick="nextTrack()" class="btn-secondary">
-                NEXT TRACK
-            </button>
+            <div style="display: flex; gap: 10px; justify-content: center; max-width: 100%;">
+                <button id="next-btn" onclick="nextTrack()" class="btn-secondary" style="margin-top: 0; flex: 1;">
+                    NEXT TRACK
+                </button>
+                
+                <a href="/" class="btn-secondary" 
+                   style="margin-top: 0; flex: 1; text-decoration: none; display: inline-block; box-sizing: border-box; border-color: #64748b; color: #94a3b8; background: #0f172a;">
+                    QUIT GAME
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -300,6 +304,7 @@
     let currentSongData = {};
     let audioPlayer = null;
     let audioClueUsed = false;
+    let turnOver = false;
 
     function setGenre(event, element, genre) {
         if (event) event.preventDefault();
@@ -322,23 +327,27 @@
         audioClueUsed = false;
         currentStage = 1;
         pointsPossible = 100;
+        turnOver = false;
 
         if (audioPlayer) { audioPlayer.pause(); audioPlayer = null; }
 
         document.getElementById('pts-display').innerText = "100";
         const clueBtn = document.getElementById('clue-btn');
-        clueBtn.innerText = "NEED A CLUE (75 PTS)";
-        clueBtn.disabled = false;
-        clueBtn.style.display = "block";
-        clueBtn.style.opacity = "1";
+        if (clueBtn) {
+            clueBtn.innerText = "NEED A CLUE (75 PTS)";
+            clueBtn.disabled = false;
+            clueBtn.style.display = "block";
+            clueBtn.style.opacity = "1";
+        }
 
         document.getElementById('next-btn').style.display = "none";
         document.getElementById('reveal-btn').style.display = "none";
         document.getElementById('user-guess').value = "";
 
-        ['stage-2', 'stage-3', 'answer-box'].forEach(id =>
-            document.getElementById(id).classList.add('hidden')
-        );
+        ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
 
         document.getElementById('audioClueContainer').style.display = "none";
         document.getElementById('replayContainer').style.display = "none";
@@ -367,12 +376,14 @@
     }
 
     function handleClueRequest(event) {
-        event?.preventDefault(); 
+        if (event) event.preventDefault(); 
 
-        if (audioClueUsed) return;
+        if (audioClueUsed || turnOver) return; 
         if (currentStage >= 4) return;
 
         const clueBtn = document.getElementById('clue-btn');
+        if (!clueBtn) return;
+        
         currentStage++;
 
         if (currentStage === 2) {
@@ -401,12 +412,15 @@
     }
 
     function checkGuess() {
+        if (turnOver) return;
+
         let userGuess = document.getElementById('user-guess').value.toLowerCase().trim();
         const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : "";
 
         if (clean(userGuess).includes(clean(currentSongData.Song)) ||
             clean(userGuess).includes(clean(currentSongData.Artist))) {
 
+            turnOver = true; 
             score += pointsPossible;
             streak++;
             document.getElementById('feedback-text').innerText = "✅ CORRECT!";
@@ -422,16 +436,23 @@
     }
 
     function giveUp() {
-        showFullReveal();
-        streak = 0;
+        turnOver = true;      
+        pointsPossible = 0;   
+        streak = 0;           
+        
+        document.getElementById('pts-display').innerText = "0";
         document.getElementById('player-streak').innerText = streak;
+        document.getElementById('feedback-text').innerText = "🏳️ Surrendered.";
+        
+        showFullReveal();
         if (audioPlayer) audioPlayer.pause();
     }
 
     function showFullReveal() {
-        ['stage-2', 'stage-3', 'answer-box'].forEach(id =>
-            document.getElementById(id).classList.remove('hidden')
-        );
+        ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        });
         document.getElementById('clue-btn').style.display = "none";
         document.getElementById('reveal-btn').style.display = "none";
         document.getElementById('next-btn').style.display = "block";
@@ -443,7 +464,7 @@
         audioClueUsed = true;
         currentStage = 4;
         let clueBtn = document.getElementById('clue-btn');
-        if(clueBtn) clueBtn.disabled = true;
+        if (clueBtn) clueBtn.disabled = true;
 
         document.getElementById("audioClueContainer").style.display = "none";
 
@@ -470,20 +491,34 @@
 
             document.getElementById("replayContainer").style.display = "block";
 
+			// Safety fade timeout after 8 seconds of playing
             setTimeout(() => {
-                let fade = setInterval(() => {
-                    if (audio.volume > 0.05) {
-                        audio.volume -= 0.05;
-                    } else {
-                        audio.pause();
-                        clearInterval(fade);
-                    }
-                }, 150);
-            }, 8000);
+                if (audioPlayer && !audio.paused) {
+                    let fade = setInterval(() => {
+                        if (audio.volume > 0.05) {
+                            audio.volume -= 0.05;
+                        } else {
+                            clearInterval(fade); // 🔑 Fix: Stop the loop from running forever first
+                            audio.pause();       // Stop the playback
+                            audio.volume = 0.9;  // Reset volume back to standard for the next turn
+                        }
+                    }, 150);
+                }
+            }, 8000);	
 
         } catch (err) {
             console.error("Audio error:", err);
             alert("Could not load audio preview.");
+        }
+    }
+
+	function replayAudio() {
+        const audio = document.getElementById("audioPlayer");
+        if (audio) {
+            audio.pause();       // 1. Force halt any ongoing background fade processes
+            audio.currentTime = 0; // 2. 🔑 CRITICAL: Rewind the tracking playhead back to 0.0 seconds
+            audio.volume = 0.9;  // 3. Restore clean, crisp volume levels
+            audio.play();        // 4. Fire the stream back up from the start
         }
     }
 
