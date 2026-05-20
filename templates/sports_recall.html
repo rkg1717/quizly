@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Sports Recall{% endblock %}
+
+{% block content %}
+<style>
+    html, body {
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        background-color: #0f172a; 
+        color: #f8fafc; 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        max-width: 100vw;
+        min-width: 100vw;
+        overflow-x: hidden;
+    }
+
+    :root {
+        --slate: #1e293b;
+        --emerald: #10b981;
+        --glass: rgba(255, 255, 255, 0.05);
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+    }
+
+    .sports-recall-container { 
+        max-width: 600px; 
+        width: 100%;
+        margin: 0 auto;
+        border: 1px solid rgba(255,255,255,0.1); 
+        background: var(--slate); 
+        border-radius: 12px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        padding: 20px 15px 30px 15px; 
+        box-sizing: border-box;
+    }
+
+    .genre-nav {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        gap: 12px;
+        margin-bottom: 25px;
+        padding: 5px 0 15px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        scrollbar-width: none;
+    }
+
+    .genre-nav::-webkit-scrollbar { display: none; }
+
+    .genre-link {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: 0.3s;
+        padding: 6px 15px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.05);
+        flex-shrink: 0;
+        text-decoration: none;
+    }
+
+    .genre-link:hover { color: white; background: rgba(255,255,255,0.15); }
+    .genre-link.active { color: white; background: var(--emerald); }
+
+    .reveal-box {
+        background: var(--glass);
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.4s ease;
+        box-sizing: border-box;
+    }
+
+    .sticky-guess {
+        background: #020617 !important; 
+        border: 2px solid var(--emerald) !important; 
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2); 
+        margin-top: 5px !important;
+        z-index: 10;
+        box-sizing: border-box;
+    }
+
+    #user-guess {
+        color: #ffffff !important; 
+        background: #1e293b;
+        border: 1px solid #334155;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #user-guess:focus { border-color: var(--emerald); background: #26334a; }
+
+    .label { 
+        font-size: 0.7rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.15em; 
+        color: var(--emerald); 
+        margin-bottom: 12px;
+        font-weight: 800;
+    }
+
+    .headline-text { 
+        font-family: 'Monaco', 'Courier New', monospace; 
+        font-size: 1.1rem; 
+        color: #cbd5e1;
+        line-height: 1.5;
+    }
+
+    .btn-primary { 
+        background: var(--emerald); 
+        color: #0f172a; 
+        padding: 14px 24px; 
+        border-radius: 6px; 
+        font-weight: 700; 
+        border: none; 
+        cursor: pointer;
+        width: 100%;
+        text-transform: uppercase;
+        box-sizing: border-box;
+    }
+
+    .btn-primary:disabled { background: #475569; cursor: not-allowed; opacity: 0.5; }
+
+    .btn-secondary {
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid #475569;
+        margin-top: 12px;
+        width: 100%;
+        padding: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        box-sizing: border-box;
+    }
+
+    .hidden { display: none; opacity: 0; }
+    #answer-box { border-left: 4px solid var(--emerald); background: rgba(16, 185, 129, 0.05); }
+</style>
+
+<div class="sports-recall-container">
+    <div style="text-align: center; margin-bottom: 15px;">
+        <div style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
+            SPORTS RECALL
+        </div>
+        <div style="font-size: 0.9rem; font-weight: 600; color: var(--emerald); margin-top: 4px;">
+            Select a sport and a decade to recall historical legends and milestones →
+        </div>
+    </div>
+    
+    <div class="genre-nav" id="sport-nav">
+        <a href="#" class="genre-link active" onclick="setSport(event, this, 'Baseball')">BASEBALL</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Football (U.S.)')">FOOTBALL (U.S.)</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Soccer')">SOCCER</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Hockey')">HOCKEY</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Golf')">GOLF</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Tennis')">TENNIS</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Volley Ball')">VOLLEY BALL</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Swimming')">SWIMMING</a>
+        <a href="#" class="genre-link" onclick="setSport(event, this, 'Track & Field')">TRACK & FIELD</a>
+    </div>
+
+    <div class="genre-nav" id="decade-nav">
+        <a href="#" class="genre-link active" onclick="setDecade(event, this, 'Random')">RANDOM</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1950s')">50s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1960s')">60s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1970s')">70s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1980s')">80s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1990s')">90s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '2000s')">00s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '2010s')">10s</a>
+    </div>
+
+    <div id="game-board">
+        <div class="reveal-box">
+            <div class="label">Event Headline</div>
+            <div id="headline-display" class="headline-text">ANALYZING...</div>
+        </div>
+
+        <div id="stage-2" class="reveal-box hidden">
+            <div class="label">The Setup</div>
+            <div id="setup-display" style="line-height: 1.5;"></div>
+        </div>
+
+        <div id="stage-3" class="reveal-box hidden">
+            <div class="label">Historical Trivia Fragment</div>
+            <div id="trivia-display" style="font-size: 1.1rem; font-style: italic; line-height: 1.5;"></div>
+        </div>
+
+        <div id="answer-box" class="reveal-box hidden" style="margin-bottom: 10px;">
+            <div class="label">Identity Confirmed</div>
+            <div id="subject-answer" style="font-size: 1.4rem; font-weight: 800; color: var(--emerald);"></div>
+            <div id="context-details" style="color: var(--text-dim); margin-top: 4px;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin: 0 5px 10px 5px; font-weight: 800;">
+            <span style="color: var(--text-dim);">
+                SCORE: <span id="player-score" style="color: var(--emerald);">0</span>
+            </span>
+            <span style="color: var(--text-dim);">
+                STREAK: <span id="player-streak" style="color: #ffffff;">0</span>
+            </span>
+        </div>
+
+        <div id="feedback-text" style="font-weight: 800; text-align: center; margin-bottom: 10px; font-size: 2rem; min-height: 2.5rem;"></div>
+
+        <div id="guess-section" class="reveal-box sticky-guess" style="margin-top: 0;">
+            <div class="label" style="color: var(--emerald); margin-bottom: 8px;">
+                READY TO RECALL? (<span id="pts-display">100</span> PTS)
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="user-guess" placeholder="Enter Player, Team, or Event...">
+                <button id="submit-btn" onclick="checkGuess()"
+                    style="background: var(--emerald); color: #020617; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
+                    SUBMIT
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button id="clue-btn" onclick="handleClueRequest(event)" class="btn-primary"
+                style="display: block; margin: 0 auto 10px auto;">
+                NEED A CLUE (75 PTS)
+            </button>
+
+            <button id="reveal-btn" onclick="giveUp()" class="btn-secondary"
+                style="display: none; border-color: #ef4444; color: #ef4444; margin-bottom: 10px;">
+                I GIVE UP (0 PTS)
+            </button>
+
+            <div style="display: flex; gap: 10px; justify-content: center; max-width: 100%;">
+                <button id="next-btn" onclick="nextTrack()" class="btn-secondary" style="margin-top: 0; flex: 1; display: none;">
+                    NEXT TURN
+                </button>
+                <a href="/" class="btn-secondary" 
+                   style="margin-top: 0; flex: 1; text-decoration: none; display: inline-block; box-sizing: border-box; border-color: #64748b; color: #94a3b8; background: #0f172a;">
+                    QUIT GAME
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStage = 1;
+    let selectedSport = 'Baseball';
+    let selectedDecade = 'Random'; 
+    let score = 0;
+    let streak = 0; 
+    let pointsPossible = 100; 
+    let currentTurnData = {};
+    let turnOver = false;
+
+    function setSport(event, element, sport) {
+        if (event) event.preventDefault();
+        document.querySelectorAll('#sport-nav .genre-link').forEach(el => el.classList.remove('active'));
+        
+        const links = document.querySelectorAll('#sport-nav .genre-link');
+        links.forEach(el => {
+            if (el.textContent.trim().toLowerCase() === sport.toLowerCase()) {
+                el.classList.add('active');
+            }
+        });
+        
+        selectedSport = sport;
+        loadNewTurn();
+    }
+
+    function setDecade(event, element, decade) {
+        if (event) event.preventDefault(); 
+        document.querySelectorAll('#decade-nav .genre-link').forEach(el => el.classList.remove('active'));
+        
+        const links = document.querySelectorAll('#decade-nav .genre-link');
+        links.forEach(el => {
+            let compareText = el.textContent.trim().toLowerCase();
+            if (decade.includes(compareText.replace('s', '')) || compareText === decade.toLowerCase()) {
+                el.classList.add('active');
+            }
+        });
+        
+        selectedDecade = decade;
+        loadNewTurn();
+    }
+
+    async function loadNewTurn() {
+        const feedback = document.getElementById('feedback-text');
+        feedback.innerText = "";
+        feedback.style.color = "";     
+        feedback.style.fontSize = "";  
+
+        currentStage = 1;
+        pointsPossible = 100;
+        turnOver = false;
+
+        document.getElementById('pts-display').innerText = "100";
+        const clueBtn = document.getElementById('clue-btn');
+        if (clueBtn) {
+            clueBtn.innerText = "NEED A CLUE (75 PTS)";
+            clueBtn.disabled = false;
+            clueBtn.style.display = "block";
+        }
+
+        document.getElementById('next-btn').style.display = "none";
+        document.getElementById('reveal-btn').style.display = "none";
+        document.getElementById('user-guess').value = "";
+
+        ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+
+        document.getElementById('headline-display').innerText = "ANALYZING...";
+        document.getElementById('player-score').innerText = score;
+        document.getElementById('player-streak').innerText = streak;
+
+        try {
+            const response = await fetch('/get_sports_turn', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ genre: selectedSport, decade: selectedDecade }) 
+            });
+
+            currentTurnData = await response.json();
+
+            document.getElementById('headline-display').innerText = currentTurnData.Headline;
+            document.getElementById('setup-display').innerText = currentTurnData.TheSetup;
+            document.getElementById('trivia-display').innerText = `"${currentTurnData.TriviaFragment}"`;
+            document.getElementById('subject-answer').innerText = currentTurnData.Subject;
+            document.getElementById('context-details').innerText = currentTurnData.ContextDetails;
+
+        } catch (e) {
+            document.getElementById('headline-display').innerText = "SYSTEM ERROR.";
+        }
+    }
+
+    function handleClueRequest(event) {
+        if (event) event.preventDefault(); 
+        if (turnOver || currentStage >= 3) return;
+
+        const clueBtn = document.getElementById('clue-btn');
+        if (!clueBtn) return;
+        
+        currentStage++;
+
+        if (currentStage === 2) {
+            pointsPossible = 75;
+            document.getElementById('stage-2').classList.remove('hidden');
+            clueBtn.innerText = "NEED ANOTHER CLUE? (50 PTS)";
+            document.getElementById('reveal-btn').style.display = "block";
+        }
+        else if (currentStage === 3) {
+            pointsPossible = 50;
+            document.getElementById('stage-3').classList.remove('hidden');
+            clueBtn.innerText = "NO CLUES LEFT";
+            clueBtn.disabled = true;
+        }
+
+        document.getElementById('pts-display').innerText = pointsPossible;
+    }
+
+    function checkGuess() {
+        if (turnOver) return;
+
+        let userGuess = document.getElementById('user-guess').value.toLowerCase().trim();
+        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : "";
+
+        if (clean(userGuess).includes(clean(currentTurnData.Subject))) {
+            turnOver = true; 
+            score += pointsPossible;
+            streak++;
+            document.getElementById('feedback-text').innerText = "✅ CORRECT!";
+            showFullReveal();
+        } else {
+            document.getElementById('feedback-text').innerText = "❌ Nope. Try Again?";
+        }
+
+        document.getElementById('player-score').innerText = score;
+        document.getElementById('player-streak').innerText = streak;
+    }
+
+    function giveUp() {
+        turnOver = true;      
+        pointsPossible = 0;   
+        streak = 0;           
+        
+        document.getElementById('pts-display').innerText = "0";
+        document.getElementById('player-streak').innerText = streak;
+        
+        const feedback = document.getElementById('feedback-text');
+        feedback.innerText = "🏳️ Surrendered.";
+        feedback.style.color = "#fca5a5";    
+        feedback.style.fontSize = "1.4rem";  
+        
+        showFullReveal();
+    }
+
+    function showFullReveal() {
+        ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        });
+        document.getElementById('clue-btn').style.display = "none";
+        document.getElementById('reveal-btn').style.display = "none";
+        document.getElementById('next-btn').style.display = "block";
+    }
+
+    function nextTrack() {
+        loadNewTurn();
+    }
+
+    window.onload = loadNewTurn;
+</script>
+{% endblock %}

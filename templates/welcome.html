@@ -23,7 +23,7 @@
     .hub-container {
         display: flex;
         flex-direction: row;
-        flex-wrap: nowrap; /* 🔑 Forces them to stay side-by-side on the phone */
+        flex-wrap: wrap; /* 🔑 Forces them to stay side-by-side on the phone */
         gap: 12px;
         justify-content: center;
         align-items: stretch; /* Makes both cards the exact same height */
@@ -84,18 +84,25 @@
         </p>
     </div>
 
-    <div class="hub-container">
-        <a href="/fixit_intro" class="game-card">
-            <img src="{{ url_for('static', filename='fixit_thumb.png') }}" class="game-image" alt="FixIt Game">
-            <h2>FIXIT</h2>
-            <p class="card-text">Master the art of home maintenance. Repair, rewire, and resolve!</p>
-        </a>
+	<div class="hub-container">
+		<a href="/fixit_intro" class="game-card">
+			<img src="{{ url_for('static', filename='fixit_thumb.png') }}" class="game-image" alt="FixIt Game">
+			<h2>FIXIT</h2>
+			<p class="card-text">Master the art of home maintenance. Repair, rewire, and resolve!</p>
+		</a>
 
-        <a href="/music_recall" class="game-card">
-            <img src="{{ url_for('static', filename='music_thumb.png') }}" class="game-image" alt="Music Recall">
-            <h2>MUSIC RECALL</h2>
-            <p class="card-text">Identify legendary tracks. From Benny Goodman to Country and Jazz.</p>
-        </a>
-    </div>
+		<a href="/music_recall" class="game-card">
+			<img src="{{ url_for('static', filename='music_thumb.png') }}" class="game-image" alt="Music Recall">
+			<h2>MUSIC RECALL</h2>
+			<p class="card-text">Identify legendary tracks. From Benny Goodman to Country and Jazz.</p>
+		</a>
+
+		<a href="/sports_recall" class="game-card">
+			<img src="{{ url_for('static', filename='sports_thumb.png') }}" class="game-image" alt="Sports Recall">
+			<h2>SPORTS RECALL</h2>
+			<p class="card-text">Test your knowledge of iconic athletes, teams, and unforgettable sports moments.</p>
+		</a>
+	</div>
+
 </div>
 {% endblock %}
