@@ -167,6 +167,126 @@
       "subsubtopic": "wine",
       "difficulty": "experienced",
       "timestamp": "2026-05-18T11:12:05.218981"
+    },
+    {
+      "question": "My home's water lines have frequent leaks and low pressure. Should I replace the entire system, patch the leaks, or use sealant for quick fixes?",
+      "category": "plumbing",
+      "subtopic": "water",
+      "subsubtopic": "lines",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T15:16:31.166372"
+    },
+    {
+      "question": "My double-hung vinyl window won’t stay open. Should I:",
+      "category": "interior",
+      "subtopic": "windows",
+      "subsubtopic": "type",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T15:27:04.535463"
+    },
+    {
+      "question": "What is the best method for cleaning exterior windows that are two stories high, ensuring safety and effectiveness, without using harmful chemicals?",
+      "category": "interior",
+      "subtopic": "windows",
+      "subsubtopic": "cleaning",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T15:28:05.060187"
+    },
+    {
+      "question": "How can I effectively repair a torn window screen in my living room, considering I have limited tools and need a long-lasting solution?",
+      "category": "interior",
+      "subtopic": "windows",
+      "subsubtopic": "screens",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T15:43:27.905161"
+    },
+    {
+      "question": "What is the best type of interior door to install in a high-humidity bathroom to prevent warping over time?",
+      "category": "interior",
+      "subtopic": "doors",
+      "subsubtopic": "types",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T15:44:03.115391"
+    },
+    {
+      "question": "My front door handle is sticking and occasionally jamming. Should I lubricate it, replace the handle with a similar model, install a higher-quality handle, or simply tighten the screws?",
+      "category": "interior",
+      "subtopic": "doors",
+      "subsubtopic": "handles",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T16:02:52.803242"
+    },
+    {
+      "question": "My kitchen faucet is leaking from the base, and I have limited access under the sink. What is the best long-term solution to fix this issue?",
+      "category": "plumbing",
+      "subtopic": "water",
+      "subsubtopic": "faucet",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T16:03:30.953800"
+    },
+    {
+      "question": "How can I effectively prepare healthy lunches for work, considering I have limited fridge space and want to avoid using plastic containers?",
+      "category": "cooking",
+      "subtopic": "lunch",
+      "subsubtopic": "healthy",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T16:03:33.490676"
+    },
+    {
+      "question": "What is the best method for preventing dry rot on exterior wood surfaces before painting?",
+      "category": "exterior",
+      "subtopic": "dry rot",
+      "subsubtopic": "paint",
+      "difficulty": "beginner",
+      "timestamp": "2026-05-21T16:04:20.664351"
+    },
+    {
+      "question": "What is the most effective roofing material for a long-lasting and energy-efficient roof replacement?",
+      "category": "exterior",
+      "subtopic": "roof",
+      "subsubtopic": "replacement",
+      "difficulty": "beginner",
+      "timestamp": "2026-05-21T16:05:13.335995"
+    },
+    {
+      "question": "What is the most effective tool for aerating compacted garden soil to promote healthy root growth?",
+      "category": "tools",
+      "subtopic": "garden",
+      "subsubtopic": "equipment",
+      "difficulty": "beginner",
+      "timestamp": "2026-05-21T16:14:50.969112"
+    },
+    {
+      "question": "Should I consider switching phone carriers if my current service consistently drops calls and has slow data speeds?",
+      "category": "services",
+      "subtopic": "phone carriers",
+      "subsubtopic": "service",
+      "difficulty": "beginner",
+      "timestamp": "2026-05-21T16:22:46.159260"
+    },
+    {
+      "question": "What is the best method to clean stained brick exterior without damaging it, considering the house is in a historic district with strict guidelines?",
+      "category": "exterior",
+      "subtopic": "brick",
+      "subsubtopic": "cleaning",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T16:36:28.821771"
+    },
+    {
+      "question": "How can I safely check if my electrical outlets are providing the correct voltage?",
+      "category": "electrical",
+      "subtopic": "outlets",
+      "subsubtopic": "voltage",
+      "difficulty": "beginner",
+      "timestamp": "2026-05-21T16:37:54.349291"
+    },
+    {
+      "question": "How do you safely replace a malfunctioning light switch in a room with limited access to the electrical panel?",
+      "category": "electrical",
+      "subtopic": "switches",
+      "subsubtopic": "replace",
+      "difficulty": "experienced",
+      "timestamp": "2026-05-21T16:38:18.711860"
     }
   ],
   "used_subtopics": {
@@ -181,7 +301,9 @@
       "lawn|new and existing"
     ],
     "electrical": [
-      "outlets|test"
+      "outlets|test",
+      "outlets|voltage",
+      "switches|replace"
     ],
     "recreation": [
       "kayaks|safety"
@@ -191,12 +313,18 @@
       "WIFI|ISP",
       "WIFI|downloads",
       "streaming|setup",
-      "streaming|problems"
+      "streaming|problems",
+      "phone carriers|service"
     ],
     "interior": [
       "walls|material",
       "painting|paints",
-      "painting|technique"
+      "painting|technique",
+      "windows|type",
+      "windows|cleaning",
+      "windows|screens",
+      "doors|types",
+      "doors|handles"
     ],
     "appliances": [
       "dishwasher|issues",
@@ -205,7 +333,20 @@
     ],
     "cooking": [
       "dinners|easy",
-      "dinners|wine"
+      "dinners|wine",
+      "lunch|healthy"
+    ],
+    "plumbing": [
+      "water|lines",
+      "water|faucet"
+    ],
+    "exterior": [
+      "dry rot|paint",
+      "roof|replacement",
+      "brick|cleaning"
+    ],
+    "tools": [
+      "garden|equipment"
     ]
   }
 }

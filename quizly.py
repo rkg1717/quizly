@@ -301,12 +301,25 @@ def get_subtopic_pairs(category):
     return pairs
 
 def generate_prompt(category, difficulty, subtopic, subsubtopic, question_type):
-    """Generate a focused prompt with strong category enforcement and single-question requirement."""
+    """Generate a focused prompt with strong category enforcement and strict difficulty guidelines."""
+
+    # Define explicit criteria for the AI depending on the chosen difficulty
+    if difficulty.lower() == "beginner":
+        difficulty_rules = """- The question MUST focus on basic recognition, common tools, safety fundamentals, or easy troubleshooting.
+- Think about what a homeowner handling a weekend DIY project for the first time should know.
+- Avoid hyper-technical trade terms, complex mathematical measurements, or advanced building codes."""
+    else:  # experienced
+        difficulty_rules = """- The question MUST focus on advanced troubleshooting, structural physics, complex diagnostic metrics, or strict building codes.
+- Think about scenarios that require specialized trade knowledge, professional machinery, or precise calculations.
+- Avoid basic 'what is this tool' questions. Challenge them with hidden structural failures, complex systems integration, or precision engineering problems."""
 
     # ---------------- MULTIPLE CHOICE ----------------
     if question_type == "multiple_choice":
         prompt = f"""
 Generate ONE SINGLE {difficulty}-level {category} repair multiple-choice question.
+
+CRITICAL DIFFICULTY RULES FOR {difficulty.upper()}:
+{difficulty_rules}
 
 CRITICAL CATEGORY RULES:
 - The question MUST be specific to the category: {category}
@@ -342,6 +355,9 @@ Correct Answer: [A/B/C/D]
     elif question_type == "yes_no":
         prompt = f"""
 Generate ONE SINGLE {difficulty}-level {category} repair YES/NO question.
+
+CRITICAL DIFFICULTY RULES FOR {difficulty.upper()}:
+{difficulty_rules}
 
 CRITICAL CATEGORY RULES:
 - The question MUST be specific to the category: {category}
@@ -1406,7 +1422,6 @@ def get_music_turn():
 
     return jsonify(song_data)
   
-# --- MUSIC RECALL ENGINE ---
 # --- MUSIC RECALL ENGINE ---
 # 🔑 Fix: Pass the decade variable into the function alongside genre and temp
 def generate_music_challenge(genre, decade="Random", temp=0.7):

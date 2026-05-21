@@ -178,14 +178,16 @@ html, body {
 </style>
 
 <div class="music-recall-container">
-    <div style="text-align: center; margin-top: 0; padding: 0 5px;">
-        <div style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
-            MUSIC RECALL
-        </div>
-        <div style="font-size: 0.9rem; font-weight: 600; color: #38bdf8; margin-top: 4px; line-height: 1.3;">
-            Expect songs to get harder to recall after a couple of turns.<pre>\n</pre> Select genre and decade --->       
+	<div style="text-align: center; margin-top: 0; padding: 0 5px;">
+		<div style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
+			MUSIC RECALL
 		</div>
-    </div>
+		<div style="font-size: 0.9rem; font-weight: 600; color: #38bdf8; margin-top: 4px; line-height: 1.3;">
+			1. Select the genre and decade to let AI pick a song and artist (slide right if needed).<br>
+			2. Scroll down to select additional clues or enter your answer/guess in the 'Ready to Recall' box.<br>
+			3. Points are awarded based on how many of the four clues you need and zero points if you 'Give Up'.
+		</div>
+	</div>
     
 		<div class="genre-nav" id="genre-nav">
 		<a href="#" class="genre-link active" onclick="setGenre(event, this, 'Country'); return false;">COUNTRY</a>
@@ -276,7 +278,7 @@ html, body {
         <div style="margin-top: 20px; text-align: center;">
             <button id="clue-btn" onclick="handleClueRequest(event)" class="btn-primary"
                 style="display: block; margin: 0 auto 10px auto;">
-                NEED A CLUE (Next Value: 75 pts)
+                I NEED A CLUE (Next Value: 75 pts)
             </button>
 
             <button id="reveal-btn" onclick="giveUp()" class="btn-secondary"
@@ -341,7 +343,7 @@ html, body {
         document.getElementById('pts-display').innerText = "100";
         const clueBtn = document.getElementById('clue-btn');
         if (clueBtn) {
-            clueBtn.innerText = "NEED A CLUE (75 PTS)";
+            clueBtn.innerText = "I NEED A CLUE (75 PTS)";
             clueBtn.disabled = false;
             clueBtn.style.display = "block";
             clueBtn.style.opacity = "1";
@@ -396,12 +398,12 @@ html, body {
         if (currentStage === 2) {
             pointsPossible = 75;
             document.getElementById('stage-2').classList.remove('hidden');
-            clueBtn.innerText = "NEED ANOTHER CLUE? (50 PTS)";
+            clueBtn.innerText = "I NEED ANOTHER CLUE? (50 PTS)";
         }
         else if (currentStage === 3) {
             pointsPossible = 50;
             document.getElementById('stage-3').classList.remove('hidden');
-            clueBtn.innerText = "NEED AN AUDIO SNIPPET CLUE? (25 PTS)";
+            clueBtn.innerText = "I NEED AN AUDIO SNIPPET CLUE? (25 PTS)";
         }
         else if (currentStage === 4) {
             if (audioClueUsed) return;
