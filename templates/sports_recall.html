@@ -157,10 +157,12 @@
         <div style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
             SPORTS RECALL
         </div>
-		<div style="font-size: 0.9rem; font-weight: 600; color: var(--emerald); margin-top: 4px; white-space: normal;">
-			1. Select a sport and a decade to let AI recall historical legends and milestones (slide right if needed).<br>
-			2. Scroll down to select additional clues or enter your answer/guess in the 'Ready to Recall' box.<br>
-			3. Points are awarded based on how many of the three clues you need and zero points if you 'Give Up'.
+		<div style="font-size: 0.9rem; font-weight: 500; color: var(--emerald); margin-top: 6px; line-height: 1.45; white-space: normal;">
+			<span style="font-weight: 700;">1.</span> Select a sport and decade to let AI recall historical legends and milestones <span style="font-size: 0.8rem; opacity: 0.85;">(slide right if needed)</span>.<br>
+			<span style="font-weight: 700;">2.</span> Scroll down to select additional clues or enter your guess in the <span style="font-weight: 700;">'Ready to Recall'</span> box or select <span style="font-weight: 700;">'I Give Up'.
+			<p style="font-size: 0.8rem; font-style: italic; margin-top: 4px; margin-bottom: 0; opacity: 0.9;">
+				(Points are awarded based on how many clues you use; zero points if you 'Give Up')
+			</p>
 		</div>
 
     </div>
@@ -204,40 +206,40 @@
             <div id="trivia-display" style="font-size: 1.1rem; font-style: italic; line-height: 1.5;"></div>
         </div>
 
-        <div id="answer-box" class="reveal-box hidden" style="margin-bottom: 10px;">
-            <div class="label">Identity Confirmed</div>
-            <div id="subject-answer" style="font-size: 1.4rem; font-weight: 800; color: var(--emerald);"></div>
-            <div id="context-details" style="color: var(--text-dim); margin-top: 4px;"></div>
-        </div>
+<div id="answer-box" class="reveal-box hidden" style="margin-bottom: 10px;">
+    <div class="label">Identity Confirmed</div>
+    <div id="subject-answer" style="font-size: 1.4rem; font-weight: 800; color: var(--emerald);"></div>
+    <div id="context-details" style="color: var(--text-dim); margin-top: 4px;"></div>
+</div>
 
-        <div style="display: flex; justify-content: space-between; margin: 0 5px 10px 5px; font-weight: 800;">
-            <span style="color: var(--text-dim);">
-                SCORE: <span id="player-score" style="color: var(--emerald);">0</span>
-            </span>
-            <span style="color: var(--text-dim);">
-                STREAK: <span id="player-streak" style="color: #ffffff;">0</span>
-            </span>
-        </div>
+<div style="display: flex; justify-content: space-between; margin: 0 5px 10px 5px; font-weight: 800;">
+    <span style="color: var(--text-dim);">
+        SCORE: <span id="player-score" style="color: var(--emerald);">0</span>
+    </span>
+    <span style="color: var(--text-dim);">
+        STREAK: <span id="player-streak" style="color: #ffffff;">0</span>
+    </span>
+</div>
 
-        <div id="feedback-text" style="font-weight: 800; text-align: center; margin-bottom: 10px; font-size: 2rem; min-height: 2.5rem;"></div>
+<div id="feedback-text" style="font-weight: 800; text-align: center; font-size: 2rem;"></div>
 
-        <div id="guess-section" class="reveal-box sticky-guess" style="margin-top: 0;">
-            <div class="label" style="color: var(--emerald); margin-bottom: 8px;">
-                READY TO RECALL? (<span id="pts-display">100</span> PTS)
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="user-guess" placeholder="Enter Player, Team, or Event...">
-                <button id="submit-btn" onclick="checkGuess()"
-                    style="background: var(--emerald); color: #020617; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
-                    SUBMIT
-                </button>
-            </div>
-        </div>
+<div id="guess-section" class="reveal-box sticky-guess" style="margin-top: 10px;">
+    <div class="label" style="color: var(--emerald); margin-bottom: 8px;">
+        READY TO RECALL? (<span id="pts-display">100</span> PTS)
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="user-guess" placeholder="Enter Player, Team, or Event...">
+        <button id="submit-btn" onclick="checkGuess()"
+            style="background: var(--emerald); color: #020617; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
+            SUBMIT
+        </button>
+    </div>
+</div>
 
         <div style="margin-top: 20px; text-align: center;">
             <button id="clue-btn" onclick="handleClueRequest(event)" class="btn-primary"
                 style="display: block; margin: 0 auto 10px auto;">
-                NEED A CLUE (75 PTS)
+                I NEED ANOTHER CLUE. (75 PTS)
             </button>
 
             <button id="reveal-btn" onclick="giveUp()" class="btn-secondary"
@@ -312,7 +314,7 @@
         document.getElementById('pts-display').innerText = "100";
         const clueBtn = document.getElementById('clue-btn');
         if (clueBtn) {
-            clueBtn.innerText = "NEED A CLUE (75 PTS)";
+            clueBtn.innerText = "I NEED A CLUE. (75 PTS)";
             clueBtn.disabled = false;
             clueBtn.style.display = "block";
         }
@@ -404,9 +406,9 @@
         document.getElementById('player-streak').innerText = streak;
         
         const feedback = document.getElementById('feedback-text');
-        feedback.innerText = "🏳️ Surrendered.";
+        feedback.innerText = "🏳️I surrendered";
         feedback.style.color = "#fca5a5";    
-        feedback.style.fontSize = "1.4rem";  
+        feedback.style.fontSize = "1.2rem";  
         
         showFullReveal();
     }
