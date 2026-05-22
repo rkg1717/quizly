@@ -407,18 +407,21 @@ html, body {
             document.getElementById('stage-3').classList.remove('hidden');
             clueBtn.innerText = "WANT AN AUDIO SNIPPET CLUE? (25 PTS)";
         }
-        else if (currentStage === 4) {
-            if (audioClueUsed) return;
-            pointsPossible = 25;
-            audioClueUsed = true;
-            playAudioClue(); 
+		else if (currentStage === 4) {
+				pointsPossible = 25;
+				audioClueUsed = true;
+				
+				// 🔑 1. Explicitly make the container visible on Render
+				document.getElementById("audioClueContainer").style.display = "block";
+				
+				// 2. Fire the audio stream
+				playAudioClue(); 
 
-            clueBtn.innerText = "NO CLUES LEFT";
-            clueBtn.disabled = true;
-            clueBtn.style.opacity = "0.5";
-            document.getElementById('reveal-btn').style.display = "block";
-        }
-
+				clueBtn.innerText = "NO CLUES LEFT";
+				clueBtn.disabled = true;
+				clueBtn.style.opacity = "0.5";
+				document.getElementById('reveal-btn').style.display = "block";
+			}
         document.getElementById('pts-display').innerText = pointsPossible;
     }
 
