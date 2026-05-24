@@ -1386,17 +1386,16 @@ def goodbye():
 # --- ---------------------------------------------------------------
 # --- BEGIN MUSIC GAME SECTION ---
 # --- ---------------------------------------------------------------
+
 @app.route('/get_music_turn', methods=['POST'])
 def get_music_turn():
-    data = request.json
+    data = request.json or {}
     genre = data.get('genre', 'Country')
     decade = data.get('decade', 'Random')
 
     if 'history' not in session:
         session['history'] = []
     
-    # Calculate Dynamic Temperature
-    # Turn 0 (0.4) -> Turn 1 (0.525) -> Turn 2 (0.65) -> Turn 3 (0.775) -> Turn 4+ (0.9)
     current_turn = len(session['history'])
     start_temp = 0.4
     end_temp = 0.9
@@ -1405,15 +1404,40 @@ def get_music_turn():
     if current_turn >= ramp_up_turns:
         dynamic_temp = end_temp
     else:
-        # Linear interpolation
         dynamic_temp = start_temp + ((end_temp - start_temp) / ramp_up_turns) * current_turn
 
     for _ in range(3):
-        # 🔑 Fix: Pass both 'genre' AND 'decade' into the generator function here!
         song_data = generate_music_challenge(genre, decade, dynamic_temp)
         song_title = song_data.get('Song', '').strip().lower()
-    
-    if song_title not in session['history']:
+        artist_name = song_data.get('Artist', '').strip()
+        
+        if song_title not in session['history'] and song_title != "":
+            # --- SHIFTING AUDIO CLUE TO THE FIRST CLUE POSITION ---
+            # Fetch the preview URL right here so it can be served immediately
+            search_url = "https://itunes.apple.com/search"
+            query = f"{song_data.get('Song')} {artist_name}"
+            params = {"term": query, "limit": 1, "media": "music"}
+            
+            preview_url = None
+            try:
+                itunes_response = requests.get(search_url, params=params)
+                itunes_data = itunes_response.json()
+                if itunes_data.get("resultCount", 0) > 0:
+                    preview_url = itunes_data["results"][0]["previewUrl"]
+            except Exception as e:
+                print(f"iTunes background fetch error: {e}")
+            
+            # Attach the audio snippet path directly to the primary payload
+            song_data["AudioSnippet"] = preview_url
+            
+            # Print to terminal for verification
+            print("\n" + "="*40)
+            print(f"🎵 NEW MUSIC TARGET MASTER ANSWER:")
+            print(f"   Artist: {song_data.get('Artist')}")
+            print(f"   Song:   {song_data.get('Song')}")
+            print(f"   Audio:  {preview_url}")
+            print("="*40 + "\n")
+
             history = session['history']
             history.append(song_title)
             session['history'] = history[-10:]
@@ -1423,7 +1447,6 @@ def get_music_turn():
     return jsonify(song_data)
   
 # --- MUSIC RECALL ENGINE ---
-# 🔑 Fix: Pass the decade variable into the function alongside genre and temp
 def generate_music_challenge(genre, decade="Random", temp=0.7):
     api_key = get_openai_api_key()
     if not api_key:
@@ -1431,14 +1454,11 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
         
     client = OpenAI(api_key=api_key)
 
-    # 🔑 Fix: Create a dynamic instruction block for the timeline
     if decade == "Random" or not decade:
         date_instruction = "Randomly select a song from any year between 1950 and 2024."
     else:
-        # If '1980s' is selected, this tells it: 'from the 1980s era (1980-1989)'
         date_instruction = f"CRITICAL: You MUST select a song released specifically in the {decade} era."
 
-    # --- ENHANCED RANDOMNESS PROMPT ---
     prompt = f"""
     You are a music historian. Generate ONE high-quality music trivia challenge for a {genre} song.
     
@@ -1471,110 +1491,8 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
         
         text = response.choices[0].message.content.strip()
         
-# --- ROBUST PARSING LOGIC ---
         data = {}
         fields = ["Beat", "Lowdown", "Lyric", "Song", "Artist", "Year"]
-        
-        for field in fields:
-                    pattern = rf"^{field}\s*[:\-*]*\s*(.*)"
-                    match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
-                    
-                    if match:
-                        clean_value = match.group(1).replace("**", "").replace('"', '').strip()
-                        data[field] = clean_value
-                    else:
-                        data[field] = f"Unknown {field}"
-
-        return data
-
-    except Exception as e:
-        print(f"Music Engine Error: {e}")
-        return {"Beat": "Connection Error", "Lowdown": "The signal was interrupted."}
-
-@app.route('/get_audio_clue/<song_name>/<artist_name>')
-def get_audio_clue(song_name, artist_name):
-    search_url = "https://itunes.apple.com/search"
-    query = f"{song_name} {artist_name}"
-    params = {"term": query, "limit": 1, "media": "music"}
-    
-    try:
-        response = requests.get(search_url, params=params)
-        data = response.json()
-        
-        if data.get("resultCount", 0) > 0:
-            preview_url = data["results"][0]["previewUrl"]
-            # CHANGE THIS: Return JSON instead of a redirect
-            return jsonify({"url": preview_url})
-        else:
-            return jsonify({"error": "Not found"}), 404
-            
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-@app.route("/music_recall")
-def music_recall_route():
-    print("DEBUG: User is attempting to load /music_recall")
-    return render_template("music_recall.html")
-
-# --- ---------------------------------------------------------------
-# --- BEGIN SPORTS GAME SECTION ---
-# --- ---------------------------------------------------------------
-@app.route('/sports_recall')
-def sports_recall():
-    # Renders the new dashboard template we will create next
-    return render_template('sports_recall.html')
-
-# --- SPORTS RECALL ENGINE ---
-def generate_sports_challenge(sport, decade="Random", temp=0.7):
-    api_key = get_openai_api_key()
-    if not api_key:
-        return {"Headline": "API Key Missing", "TheSetup": "Check your configuration."}
-        
-    client = OpenAI(api_key=api_key)
-
-    # Handle the chosen decade restriction dynamically
-    if decade == "Random" or not decade:
-        date_instruction = "Randomly select an era-defining moment, legendary athlete, or historic team milestone from any year between 1950 and 2026."
-    else:
-        date_instruction = f"CRITICAL: The milestone or athlete chosen MUST belong specifically to the {decade} era."
-
-    # Tailor instructions for specific types of sports if needed
-    sport_focus = ""
-    if "Golf" in sport or "Tennis" in sport or "Swimming" in sport or "Track" in sport:
-        sport_focus = "Focus primarily on iconic individual tournament runs, historic records broken, or legendary solo athletes."
-    elif "Football" in sport or "Baseball" in sport or "Soccer" in sport or "Hockey" in sport:
-        sport_focus = "You can focus on iconic championship games, historic plays, legendary team rosters, or individual Hall of Fame athletes."
-
-    prompt = f"""
-    You are an expert sports historian. Generate ONE high-quality, engaging sports trivia challenge for the sport of {sport}.
-    
-    CHRONOLOGICAL VARIETY: 
-    - {date_instruction}
-    - Rotate between universally famous legendary milestones, dramatic underdog stories, and unforgettable championship moments.
-    - {sport_focus}
-    
-    IMPORTANT: All fields (Headline, TheSetup, TriviaFragment, Subject, ContextDetails) MUST refer to the exact same single athlete, team, or game event. Never mention the final answer inside the clue blocks.
-    
-    FORMAT EXACTLY:
-    Headline: [A short, evocative title capturing the vibe or nickname of the moment or athlete without giving away names]
-    TheSetup: [A 2-3 sentence deep context paragraph describing the high-stakes tactical setting, the stadium/venue context, or the mountain the athlete had to climb]
-    TriviaFragment: [A specific, definitive historical quote, stadium record stat line, or exact play-by-play execution detail that clinches the identity]
-    Subject: [The exact core answer - Name of the Player, Team, or Specific Event that users must guess]
-    ContextDetails: [Supporting details revealed at the end, such as the exact year, stadium/course name, or opposing team]
-    """
-    
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=temp 
-        )
-        
-        text = response.choices[0].message.content.strip()
-        
-        # Robust parsing loop matching your music recall architecture
-        data = {}
-        fields = ["Headline", "TheSetup", "TriviaFragment", "Subject", "ContextDetails"]
         
         for field in fields:
             pattern = rf"^{field}\s*[:\-*]*\s*(.*)"
@@ -1589,23 +1507,195 @@ def generate_sports_challenge(sport, decade="Random", temp=0.7):
         return data
 
     except Exception as e:
+        print(f"Music Engine Error: {e}")
+        return {"Beat": "Connection Error", "Lowdown": "The signal was interrupted."}
+
+@app.route('/get_audio_clue/<song_name>/<artist_name>')
+def get_audio_clue(song_name, artist_name):
+    # Kept for backward compatibility if template endpoints depend on it
+    search_url = "https://itunes.apple.com/search"
+    query = f"{song_name} {artist_name}"
+    params = {"term": query, "limit": 1, "media": "music"}
+    try:
+        response = requests.get(search_url, params=params)
+        data = response.json()
+        if data.get("resultCount", 0) > 0:
+            return jsonify({"url": data["results"][0]["previewUrl"]})
+        return jsonify({"error": "Not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/music_recall")
+def music_recall_route():
+    print("DEBUG: User is attempting to load /music_recall")
+    return render_template("music_recall.html")
+    
+# --- ---------------------------------------------------------------
+# --- BEGIN SPORTS GAME SECTION ---
+# --- ---------------------------------------------------------------
+import re
+# Ensure you import choice or json if needed, but keeping your structure intact
+
+@app.route('/sports_recall')
+def sports_recall():
+    # Renders the new dashboard template we will create next
+    return render_template('sports_recall.html')
+
+import re
+
+# --- SPORTS RECALL ENGINE ---
+def generate_sports_challenge(sport, decade="Random", temp=0.7, history_list=None):
+    api_key = get_openai_api_key()
+    if not api_key:
+        return {"Headline": "API Key Missing", "TheSetup": "Check your configuration."}
+        
+    client = OpenAI(api_key=api_key)
+
+    if decade == "Random" or not decade:
+        date_instruction = "Randomly select an era-defining moment, legendary athlete, or historic team milestone from any year between 1950 and 2026."
+    else:
+        date_instruction = f"CRITICAL: The milestone or athlete chosen MUST belong specifically to the {decade} era."
+
+    sport_focus = ""
+    if "Golf" in sport or "Tennis" in sport or "Swimming" in sport or "Track" in sport:
+        sport_focus = "Focus primarily on iconic individual tournament runs, historic records broken, or legendary solo athletes."
+    elif "Football" in sport or "Baseball" in sport or "Soccer" in sport or "Hockey" in sport:
+        sport_focus = "You can focus on iconic championship games, historic plays, legendary team rosters, or individual Hall of Fame athletes."
+
+    # Build the strict duplicate warning block
+    history_instruction = ""
+    if history_list and len(history_list) > 0:
+        forbidden_items = ", ".join(history_list)
+        history_instruction = (
+            f"CRITICAL ANTI-REPETITION RULE:\n"
+            f"Do NOT choose any of these subjects or close variations of them: [{forbidden_items}].\n"
+            f"You must pick a completely different sports figure, team, or event milestone."
+        )
+
+    prompt = f"""
+    You are an expert sports historian. Generate ONE high-quality, engaging sports trivia challenge for the sport of {sport}.
+    
+    CHRONOLOGICAL VARIETY: 
+    - {date_instruction}
+    - Rotate between universally famous legendary milestones, dramatic underdog stories, and unforgettable championship moments.
+    - {sport_focus}
+    
+    {history_instruction}
+    
+    CRITICAL CLASSIFICATION RULE:
+    You must classify the mystery answer into exactly ONE of these three categories: "Player", "Team", or "Event". 
+    
+    IMPORTANT: All fields (Headline, Category, TheSetup, TriviaFragment, Subject, ContextDetails) MUST refer to the exact same single athlete, team, or game event. Never mention the final answer inside the clue blocks.
+    
+    FORMAT EXACTLY:
+    Headline: [A short, evocative title capturing the vibe or nickname of the moment or athlete without giving away names]
+    Category: [Must be exactly either: Player, Team, or Event]
+    TheSetup: [A 2-3 sentence deep context paragraph describing the high-stakes tactical setting, the stadium/venue context, or the mountain the athlete had to climb]
+    TriviaFragment: [A specific, definitive historical quote, stadium record stat line, or exact play-by-play execution detail that clinches the identity]
+    Subject: [The exact core answer - Name of the Player, Team, or Specific Event that users must guess]
+    ContextDetails: [Supporting details revealed at the end, such as the exact year, stadium/course name, or opposing team]
+    """
+    
+    # Helper lambda function to clean and normalize text structures
+    clean_text = lambda s: re.sub(r'[^a-z0-9]', '', s.lower().strip()) if s else ""
+
+    try:
+        # We loop up to 3 times inside the backend call if the AI accidentally ignores instructions 
+        # and returns a structural variation of a question already played.
+        for attempt in range(3):
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temp + (attempt * 0.15) # Bump temperature slightly on retries to force variety
+            )
+            
+            text = response.choices[0].message.content.strip()
+            data = {}
+            fields = ["Headline", "Category", "TheSetup", "TriviaFragment", "Subject", "ContextDetails"]
+            
+            for field in fields:
+                pattern = rf"^{field}\s*[:\-*]*\s*(.*)"
+                match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+                if match:
+                    clean_value = match.group(1).replace("**", "").replace('"', '').strip()
+                    data[field] = clean_value
+                else:
+                    data[field] = f"Unknown {field}"
+
+            # Validate structural variations against history entries
+            if history_list:
+                current_subject_cleaned = clean_text(data.get("Subject", ""))
+                is_duplicate = False
+                
+                for past_item in history_list:
+                    past_cleaned = clean_text(past_item)
+                    # If they contain each other or map identically, trigger loop duplicate rejection
+                    if (current_subject_cleaned in past_cleaned) or (past_cleaned in current_subject_cleaned):
+                        is_duplicate = True
+                        break
+                
+                if is_duplicate:
+                    print(f"⚠️ REJECTION: AI generated duplicate '{data.get('Subject')}'. Re-rolling...")
+                    continue # Try loop iteration again to get a fresh question
+
+            # Break out of loop once a unique question is confirmed
+            break
+
+        # --- DYNAMIC STYLING LOGIC ---
+        styles = {
+            "player": {"color": "#FF5733", "font_family": "'Segoe UI', sans-serif", "label": "GUESS THE PLAYER", "holder": "Enter Player Name..."},
+            "team":   {"color": "#10B981", "font_family": "'Segoe UI', sans-serif", "label": "GUESS THE TEAM",   "holder": "Enter Team Name..."},
+            "event":  {"color": "#3B82F6", "font_family": "'Segoe UI', sans-serif", "label": "GUESS THE EVENT",  "holder": "Enter Event Name..."}
+        }
+        
+        category_key = data.get("Category", "Event").lower()
+        if category_key not in styles:
+            category_key = "event"
+            
+        chosen_style = styles[category_key]
+        hint_label = chosen_style["label"]
+        data["Placeholder"] = chosen_style["holder"]
+
+        original_headline = data.get("Headline", "The Challenge")
+        data["Headline"] = (
+            f"<div style='margin-bottom: 12px;'>"
+            f"  <span style=\"font-family: 'Inter', sans-serif; background-color: {chosen_style['color']}; "
+            f"  color: #0f172a; padding: 4px 10px; border-radius: 4px; font-weight: 900; "
+            f"  font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase;\">"
+            f"    {hint_label}"
+            f"  </span>"
+            f"</div>"
+            f"<div style=\"font-family: {chosen_style['font_family']}; color: #f8fafc; "
+            f"font-size: 1.25rem; font-weight: 500; line-height: 1.6;\">"
+            f"  {original_headline}"
+            f"</div>"
+        )
+
+        return data
+
+    except Exception as e:
         print(f"Sports Engine Error: {e}")
         return {"Headline": "Connection Error", "TheSetup": "The stadium feed was interrupted."}
 
 @app.route('/get_sports_turn', methods=['POST'])
 def get_sports_turn():
     data = request.get_json() or {}
-    
-    # 🔑 Captures the exact choices sent from your menu bar clicks:
-    sport_selected = data.get('genre', 'Baseball')  # frontend passes it as 'genre'
+    sport_selected = data.get('genre', 'Baseball')  
     decade_selected = data.get('decade', 'Random')
+    history_list = data.get('history', [])
     
-    # Calculate temperature dynamically if you have session tracking, or use a solid default
-    # For now, let's pass a steady 0.7 or hook into your session math:
-    turn_data = generate_sports_challenge(sport_selected, decade_selected, temp=0.7)
+    turn_data = generate_sports_challenge(sport_selected, decade_selected, temp=0.7, history_list=history_list)
+    
+    # --- DEBUGER PRINT FOR FUZZY TESTING ---
+    # This will output directly to your terminal window whenever a new challenge loads
+    print("\n" + "="*40)
+    print(f"🎯 NEW RECALL TARGET MASTER ANSWER:")
+    print(f"   Category: {turn_data.get('Category')}")
+    print(f"   Subject:  {turn_data.get('Subject')}")
+    print("="*40 + "\n")
     
     return jsonify(turn_data)
-
+    
 if __name__ == "__main__":
     import webbrowser
     # This specifically looks for Chrome. If it fails, it defaults to your system default.

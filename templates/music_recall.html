@@ -6,15 +6,13 @@
 <style>
 html, body {
         -webkit-text-size-adjust: 100%;
-        -moz-text-size-adjust: 100%;    /* 🔑 Add: Safety for alternative engine branches */
+        -moz-text-size-adjust: 100%;    
         text-size-adjust: 100%;
         background-color: #0f172a; 
         color: #f8fafc; 
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         margin: 0;
         padding: 0;
-        
-        /* 🔑 Add: Hard-lock the container so Chrome cannot stretch the canvas layout */
         width: 100%;
         max-width: 100vw;
         min-width: 100vw;               
@@ -192,7 +190,7 @@ html, body {
 		</div>
 	</div>
     
-		<div class="genre-nav" id="genre-nav">
+	<div class="genre-nav" id="genre-nav">
 		<a href="#" class="genre-link active" onclick="setGenre(event, this, 'Country'); return false;">COUNTRY</a>
 		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Rock'); return false;">ROCK</a>
 		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Jazz'); return false;">JAZZ</a>
@@ -201,7 +199,7 @@ html, body {
 		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Folk'); return false;">FOLK</a>
 		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Pop'); return false;">POP</a>
 		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Hip-Hop'); return false;">HIP-HOP</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Classical'); return false;">CLASSICAL</a>
+		<a href="#" class="genre-link" onclick="setClassical(event, this, 'Classical'); return false;">CLASSICAL</a>
 	</div>
 
 	<div class="genre-nav" id="decade-nav">
@@ -213,39 +211,41 @@ html, body {
 		<a href="#" class="genre-link" onclick="setDecade(event, this, '1990s'); return false;">90s</a>
 		<a href="#" class="genre-link" onclick="setDecade(event, this, '2000s'); return false;">00s</a>
 		<a href="#" class="genre-link" onclick="setDecade(event, this, '2010s'); return false;">10s</a>
-</div>
+	</div>
 
     <div id="game-board">
-        <div class="reveal-box">
-            <div class="label">General Description of the Song and Artist</div>
-            <div id="beat-display" class="beat-text">ANALYZING...</div>
+		<div class="reveal-box">
+            <div class="label">Clue 1: Atmospheric Description & Audio Sample</div>
+            <div id="beat-display" class="beat-text" style="margin-bottom: 15px;">ANALYZING...</div>
+            
+            <div id="mediaClueContainer" style="display:none; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                <p id="audio-cost-warning" style="font-size: 0.8rem; color: #fca5a5; font-style: italic; margin: 0 0 10px 0; font-weight: 600;">
+                    💡 Clue 1 text is worth 100 PTS. Playing this audio snippet costs a -25 PTS penalty!
+                </p>
+                <button id="mediaPlayBtn" onclick="initiateAudioPlayback()" class="btn-primary" style="background: #10b981; color: #020617;">
+                    ▶️ Play Audio Snippet (-25 PTS)
+                </button>
+            </div>
+            <div id="replayContainer" style="display:none; margin-top:10px;">
+                <button onclick="replayAudio()" class="btn-primary" style="background: #475569; color: white;">
+                    🔁 Replay Audio
+                </button>
+            </div>
         </div>
-
-        <div id="stage-2" class="reveal-box hidden">
-            <div class="label">The Lowdown</div>
-            <div id="lowdown-display"></div>
-        </div>
-
-        <div id="stage-3" class="reveal-box hidden">
-            <div class="label">Lyric Fragment (or lead instrument)</div>
-            <div id="lyric-display" style="font-size: 1.1rem; font-style: italic;"></div>
-        </div>
-
-        <div id="audioClueContainer" style="display:none; margin-top: 15px;">
-            <button onclick="playAudioClue()" class="btn-primary">
-                WANT AN AUDIO SNIPPET CLUE (25 PTS)?
-            </button>
-        </div>
-
-        <div id="replayContainer" style="display:none; margin-top:10px;">
-            <button onclick="replayAudio()" class="btn-primary" style="background: #475569; color: white;">
-                🔁 Replay Audio
-            </button>
-        </div>
-
+		
         <audio id="audioPlayer" hidden>
             <source id="audioSource" src="" type="audio/mpeg">
         </audio>
+
+        <div id="stage-2" class="reveal-box hidden">
+            <div class="label">Clue 2: The Lowdown</div>
+            <div id="lowdown-display" style="line-height: 1.5;"></div>
+        </div>
+
+        <div id="stage-3" class="reveal-box hidden">
+            <div class="label">Clue 3: Lyric Fragment (or lead instrument)</div>
+            <div id="lyric-display" style="font-size: 1.1rem; font-style: italic; line-height: 1.5;"></div>
+        </div>
 
 <div id="answer-box" class="reveal-box hidden" style="margin-bottom: 10px;">
     <div class="label">Identity Confirmed</div>
@@ -289,10 +289,9 @@ html, body {
             </button>
 
             <div style="display: flex; gap: 10px; justify-content: center; max-width: 100%;">
-                <button id="next-btn" onclick="nextTrack()" class="btn-secondary" style="margin-top: 0; flex: 1;">
+                <button id="next-btn" onclick="nextTrack()" class="btn-secondary" style="margin-top: 0; flex: 1; display: none;">
                     NEXT TRACK
                 </button>
-                
                 <a href="/" class="btn-secondary" 
                    style="margin-top: 0; flex: 1; text-decoration: none; display: inline-block; box-sizing: border-box; border-color: #64748b; color: #94a3b8; background: #0f172a;">
                     QUIT GAME
@@ -310,9 +309,56 @@ html, body {
     let streak = 0; 
     let pointsPossible = 100; 
     let currentSongData = {};
-    let audioPlayer = null;
-    let audioClueUsed = false;
+    let audioPlayerElement = null;
     let turnOver = false;
+
+    // --- FUZZY MATCH ENGINE ---
+    function getLevenshteinDistance(a, b) {
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1      // deletion
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    function isFuzzyMatch(guess, target) {
+        let g = guess.toLowerCase().trim().replace(/[^a-z0-9 ]/g, "");
+        let t = target.toLowerCase().trim().replace(/[^a-z0-9 ]/g, "");
+        
+        if (g.includes(t) || t.includes(g)) return true;
+        
+        let distance = getLevenshteinDistance(g, t);
+        let maxAllowedTypos = t.length <= 5 ? 1 : t.length <= 10 ? 2 : 3;
+        if (distance <= maxAllowedTypos) return true;
+
+        let guessWords = g.split(" ").filter(w => w.length > 1);
+        let targetWords = t.split(" ").filter(w => w.length > 1);
+        
+        if (targetWords.length === 0) return false;
+
+        let matchedWordsCount = 0;
+        targetWords.forEach(tWord => {
+            if (guessWords.some(gWord => gWord.includes(tWord) || tWord.includes(gWord))) {
+                matchedWordsCount++;
+            }
+        });
+
+        let matchRatio = matchedWordsCount / targetWords.length;
+        return matchRatio >= 0.70;
+    }
 
     function setGenre(event, element, genre) {
         if (event) event.preventDefault();
@@ -330,17 +376,23 @@ html, body {
         loadNewSong();
     }
 
+    // --- GAME LIFE CYCLE RESTORED TRACKERS ---
     async function loadNewSong() {
-		const feedback = document.getElementById('feedback-text');
-		feedback.style.color = "";     // 🔑 Resets to default white for the next round
-        feedback.style.fontSize = "";  // 🔑 Resets to standard 2rem size
+        const feedback = document.getElementById('feedback-text');
+        if (feedback) {
+            feedback.innerText = "";
+            feedback.style.color = "";     
+            feedback.style.fontSize = "";  
+        }
 		
-        audioClueUsed = false;
         currentStage = 1;
         pointsPossible = 100;
         turnOver = false;
 
-        if (audioPlayer) { audioPlayer.pause(); audioPlayer = null; }
+        if (audioPlayerElement) { 
+            audioPlayerElement.pause(); 
+            audioPlayerElement = null; 
+        }
 
         document.getElementById('pts-display').innerText = "100";
         const clueBtn = document.getElementById('clue-btn');
@@ -360,7 +412,8 @@ html, body {
             if (el) el.classList.add('hidden');
         });
 
-        document.getElementById('audioClueContainer').style.display = "none";
+        // Hide both player wrapper containers during load tracking setup
+        document.getElementById('mediaClueContainer').style.display = "none";
         document.getElementById('replayContainer').style.display = "none";
         document.getElementById('beat-display').innerText = "ANALYZING...";
         document.getElementById('player-score').innerText = score;
@@ -381,65 +434,117 @@ html, body {
             document.getElementById('song-answer').innerText = currentSongData.Song;
             document.getElementById('artist-details').innerText = `${currentSongData.Artist} (${currentSongData.Year})`;
 
+            if (currentSongData.AudioSnippet) {
+                const audio = document.getElementById("audioPlayer");
+                const source = document.getElementById("audioSource");
+                
+                source.src = currentSongData.AudioSnippet;
+                audio.load();
+                audio.volume = 0.9;
+                audioPlayerElement = audio;
+
+                // Restore cost label structures back to visible on start
+                const warningLine = document.getElementById("audio-cost-warning");
+                if (warningLine) warningLine.style.display = "block";
+
+                document.getElementById("mediaClueContainer").style.display = "block";
+            }
+
         } catch (e) {
             document.getElementById('beat-display').innerText = "SYSTEM ERROR.";
         }
     }
 
+    // --- INTEGRATED SCORING & DYNAMIC AUDIO LAYOUT CONTROLS ---
+    function initiateAudioPlayback() {
+        if (!audioPlayerElement) return;
+        
+        document.getElementById("mediaClueContainer").style.display = "none";
+        document.getElementById("replayContainer").style.display = "block"; // Explicit container target active
+        
+        // Apply the specific -25 point penalty only if snippet is chosen inside Clue 1 bounds
+        if (currentStage === 1) {
+            pointsPossible = 75;
+            document.getElementById('pts-display').innerText = pointsPossible;
+            
+            const warningLine = document.getElementById("audio-cost-warning");
+            if (warningLine) warningLine.style.display = "none";
+        }
+        
+        audioPlayerElement.play();
+
+        setTimeout(() => {
+            if (audioPlayerElement && !audioPlayerElement.paused) {
+                let fade = setInterval(() => {
+                    if (audioPlayerElement.volume > 0.05) {
+                        audioPlayerElement.volume -= 0.05;
+                    } else {
+                        clearInterval(fade);
+                        audioPlayerElement.pause();       
+                        audioPlayerElement.volume = 0.9;  
+                    }
+                }, 150);
+            }
+        }, 8000);
+    }
+
+    function replayAudio() {
+        if (audioPlayerElement) {
+            audioPlayerElement.pause();       
+            audioPlayerElement.currentTime = 0; 
+            audioPlayerElement.volume = 0.9;  
+            audioPlayerElement.play();        
+        }
+    }
+
     function handleClueRequest(event) {
         if (event) event.preventDefault(); 
-
-        if (audioClueUsed || turnOver) return; 
-        if (currentStage >= 4) return;
+        if (turnOver || currentStage >= 3) return;
 
         const clueBtn = document.getElementById('clue-btn');
         if (!clueBtn) return;
         
         currentStage++;
 
+        // Strict score grid limits tracking
         if (currentStage === 2) {
-            pointsPossible = 75;
+            pointsPossible = 50; 
             document.getElementById('stage-2').classList.remove('hidden');
-            clueBtn.innerText = "I NEED ANOTHER CLUE. (50 PTS)";
+            clueBtn.innerText = "I NEED ANOTHER CLUE. (25 PTS)";
+            document.getElementById('reveal-btn').style.display = "block";
+            
+            // Clean up old point penalty lines if skipping Clue 1 audio entirely
+            const warningLine = document.getElementById("audio-cost-warning");
+            if (warningLine) warningLine.style.display = "none";
+            
+            const dynamicBtn = document.getElementById("mediaPlayBtn");
+            if (dynamicBtn) dynamicBtn.innerText = "▶️ Play Audio Snippet";
         }
         else if (currentStage === 3) {
-            pointsPossible = 50;
+            pointsPossible = 25; 
             document.getElementById('stage-3').classList.remove('hidden');
-            clueBtn.innerText = "WANT AN AUDIO SNIPPET CLUE? (25 PTS)";
+            clueBtn.innerText = "NO CLUES LEFT";
+            clueBtn.disabled = true;
+            clueBtn.style.opacity = "0.5";
         }
-		else if (currentStage === 4) {
-				pointsPossible = 25;
-				audioClueUsed = true;
-				
-				// 🔑 1. Explicitly make the container visible on Render
-				document.getElementById("audioClueContainer").style.display = "block";
-				
-				// 2. Fire the audio stream
-				playAudioClue(); 
-
-				clueBtn.innerText = "NO CLUES LEFT";
-				clueBtn.disabled = true;
-				clueBtn.style.opacity = "0.5";
-				document.getElementById('reveal-btn').style.display = "block";
-			}
+        
         document.getElementById('pts-display').innerText = pointsPossible;
     }
 
     function checkGuess() {
         if (turnOver) return;
 
-        let userGuess = document.getElementById('user-guess').value.toLowerCase().trim();
-        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : "";
+        let userGuess = document.getElementById('user-guess').value;
 
-        if (clean(userGuess).includes(clean(currentSongData.Song)) ||
-            clean(userGuess).includes(clean(currentSongData.Artist))) {
+        if (isFuzzyMatch(userGuess, currentSongData.Song) || 
+            isFuzzyMatch(userGuess, currentSongData.Artist)) {
 
             turnOver = true; 
             score += pointsPossible;
             streak++;
             document.getElementById('feedback-text').innerText = "✅ CORRECT!";
             showFullReveal();
-            if (audioPlayer) audioPlayer.pause();
+            if (audioPlayerElement) audioPlayerElement.pause();
 
         } else {
             document.getElementById('feedback-text').innerText = "❌ Nope. Try Again?";
@@ -449,23 +554,22 @@ html, body {
         document.getElementById('player-streak').innerText = streak;
     }
 
-	function giveUp() {
-			turnOver = true;      
-			pointsPossible = 0;   
-			streak = 0;           
-			
-			document.getElementById('pts-display').innerText = "0";
-			document.getElementById('player-streak').innerText = streak;
-			
-			// Target the feedback element, update the text, and apply the soft red style
-			const feedback = document.getElementById('feedback-text');
-			feedback.innerText = "🏳️ I surrendered";
-			feedback.style.color = "#fca5a5";    /* 🔑 A clean, soft/light pastel red */
-			feedback.style.fontSize = "1.2rem";  /* 🔑 Drops it down from the default 2rem size */
-			
-			showFullReveal();
-			if (audioPlayer) audioPlayer.pause();
-		}
+    function giveUp() {
+        turnOver = true;      
+        pointsPossible = 0;   
+        streak = 0;           
+        
+        document.getElementById('pts-display').innerText = "0";
+        document.getElementById('player-streak').innerText = streak;
+        
+        const feedback = document.getElementById('feedback-text');
+        feedback.innerText = "🏳️ I surrendered";
+        feedback.style.color = "#fca5a5";    
+        feedback.style.fontSize = "1.2rem";  
+        
+        showFullReveal();
+        if (audioPlayerElement) audioPlayerElement.pause();
+    }
 
     function showFullReveal() {
         ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
@@ -477,73 +581,12 @@ html, body {
         document.getElementById('next-btn').style.display = "block";
     }
 
-    window.onload = loadNewSong;
-
-    async function playAudioClue() {
-        audioClueUsed = true;
-        currentStage = 4;
-        let clueBtn = document.getElementById('clue-btn');
-        if (clueBtn) clueBtn.disabled = true;
-
-        document.getElementById("audioClueContainer").style.display = "none";
-
-        const song = currentSongData.Song;
-        const artist = currentSongData.Artist;
-
-        try {
-            const response = await fetch(`/get_audio_clue/${encodeURIComponent(song)}/${encodeURIComponent(artist)}`);
-            const data = await response.json();
-
-            if (!data.url) {
-                alert("No audio preview found.");
-                return;
-            }
-
-            const audio = document.getElementById("audioPlayer");
-            audioPlayer = audio; 
-            const source = document.getElementById("audioSource");
-
-            source.src = data.url;
-            audio.load();
-            audio.volume = 0.9;
-            audio.play();
-
-            document.getElementById("replayContainer").style.display = "block";
-
-			// Safety fade timeout after 8 seconds of playing
-            setTimeout(() => {
-                if (audioPlayer && !audio.paused) {
-                    let fade = setInterval(() => {
-                        if (audio.volume > 0.05) {
-                            audio.volume -= 0.05;
-                        } else {
-                            clearInterval(fade); // 🔑 Fix: Stop the loop from running forever first
-                            audio.pause();       // Stop the playback
-                            audio.volume = 0.9;  // Reset volume back to standard for the next turn
-                        }
-                    }, 150);
-                }
-            }, 8000);	
-
-        } catch (err) {
-            console.error("Audio error:", err);
-            alert("Could not load audio preview.");
-        }
-    }
-
-	function replayAudio() {
-        const audio = document.getElementById("audioPlayer");
-        if (audio) {
-            audio.pause();       // 1. Force halt any ongoing background fade processes
-            audio.currentTime = 0; // 2. 🔑 CRITICAL: Rewind the tracking playhead back to 0.0 seconds
-            audio.volume = 0.9;  // 3. Restore clean, crisp volume levels
-            audio.play();        // 4. Fire the stream back up from the start
-        }
-    }
-
     function nextTrack() {
         document.getElementById('feedback-text').innerText = "";
         loadNewSong();
     }
+
+    window.onload = loadNewSong;
 </script>
+
 {% endblock %}

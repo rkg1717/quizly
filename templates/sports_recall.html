@@ -193,7 +193,7 @@
     <div id="game-board">
         <div class="reveal-box">
             <div class="label">Event Headline</div>
-            <div id="headline-display" class="headline-text">ANALYZING...</div>
+            <div id="headline-display" class="headline-text">{{ Headline | safe if Headline else 'ANALYZING...' }}</div>
         </div>
 
         <div id="stage-2" class="reveal-box hidden">
@@ -228,7 +228,7 @@
         READY TO RECALL? (<span id="pts-display">100</span> PTS)
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="user-guess" placeholder="Enter Player, Team, or Event...">
+        <input type="text" id="user-guess" placeholder="">
         <button id="submit-btn" onclick="checkGuess()"
             style="background: var(--emerald); color: #020617; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
             SUBMIT
@@ -269,6 +269,66 @@
     let pointsPossible = 100; 
     let currentTurnData = {};
     let turnOver = false;
+    
+    // NEW STATE: Tracks past correct or surrendered answers to feed anti-repetition rules
+    let playedHistory = [];
+
+    // NEW FUZZY FUNCTION: Calculates Edit Distance between two words
+    function getLevenshteinDistance(a, b) {
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1      // deletion
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+	// Enhanced Fuzzy Match evaluator allowing structural partial credit
+    function isFuzzyMatch(guess, target) {
+        let g = guess.toLowerCase().trim().replace(/[^a-z0-9 ]/g, "");
+        let t = target.toLowerCase().trim().replace(/[^a-z0-9 ]/g, "");
+        
+        // 1. Direct contains or structural subset check
+        if (g.includes(t) || t.includes(g)) return true;
+        
+        // 2. Levenshtein typo buffer checking
+        let distance = getLevenshteinDistance(g, t);
+        let maxAllowedTypos = t.length <= 5 ? 1 : t.length <= 10 ? 2 : 3;
+        if (distance <= maxAllowedTypos) return true;
+
+        // 3. PARTIAL CREDIT LOGIC: Split answers into distinct word arrays
+        let guessWords = g.split(" ").filter(w => w.length > 1); // skip tiny connector letters
+        let targetWords = t.split(" ").filter(w => w.length > 1);
+        
+        if (targetWords.length === 0) return false;
+
+        // Count how many core words from the target answer appear in the user's guess
+        let matchedWordsCount = 0;
+        targetWords.forEach(tWord => {
+            // Check if the target word is found anywhere inside the user's guess
+            if (guessWords.some(gWord => gWord.includes(tWord) || tWord.includes(gWord))) {
+                matchedWordsCount++;
+            }
+        });
+
+        // Calculate match percentage (e.g., matching 3 out of 4 words is 75%)
+        let matchRatio = matchedWordsCount / targetWords.length;
+        
+        // Require a 70% match threshold to award partial phrase wins
+        return matchRatio >= 0.70;
+    }
 
     function setSport(event, element, sport) {
         if (event) event.preventDefault();
@@ -322,6 +382,7 @@
         document.getElementById('next-btn').style.display = "none";
         document.getElementById('reveal-btn').style.display = "none";
         document.getElementById('user-guess').value = "";
+        document.getElementById('user-guess').placeholder = "";
 
         ['stage-2', 'stage-3', 'answer-box'].forEach(id => {
             const el = document.getElementById(id);
@@ -336,19 +397,28 @@
             const response = await fetch('/get_sports_turn', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ genre: selectedSport, decade: selectedDecade }) 
+                // CHANGED: History array added to fetch payload
+                body: JSON.stringify({ genre: selectedSport, decade: selectedDecade, history: playedHistory }) 
             });
 
             currentTurnData = await response.json();
 
-            document.getElementById('headline-display').innerText = currentTurnData.Headline;
+            document.getElementById('headline-display').innerHTML = currentTurnData.Headline;
             document.getElementById('setup-display').innerText = currentTurnData.TheSetup;
             document.getElementById('trivia-display').innerText = `"${currentTurnData.TriviaFragment}"`;
             document.getElementById('subject-answer').innerText = currentTurnData.Subject;
             document.getElementById('context-details').innerText = currentTurnData.ContextDetails;
 
+            document.getElementById('user-guess').placeholder = currentTurnData.Placeholder || "Enter your guess...";
+
+            // Push current answer into history record so it won't repeat next cycle
+            if (currentTurnData.Subject && currentTurnData.Subject !== "Unknown Subject") {
+                playedHistory.push(currentTurnData.Subject);
+            }
+
         } catch (e) {
             document.getElementById('headline-display').innerText = "SYSTEM ERROR.";
+            document.getElementById('user-guess').placeholder = "Failed to load turn.";
         }
     }
 
@@ -380,10 +450,10 @@
     function checkGuess() {
         if (turnOver) return;
 
-        let userGuess = document.getElementById('user-guess').value.toLowerCase().trim();
-        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : "";
+        let userGuess = document.getElementById('user-guess').value;
 
-        if (clean(userGuess).includes(clean(currentTurnData.Subject))) {
+        // CHANGED: Running the input comparison through our new fuzzy evaluator 
+        if (isFuzzyMatch(userGuess, currentTurnData.Subject)) {
             turnOver = true; 
             score += pointsPossible;
             streak++;
@@ -406,7 +476,7 @@
         document.getElementById('player-streak').innerText = streak;
         
         const feedback = document.getElementById('feedback-text');
-        feedback.innerText = "🏳️I surrendered";
+        feedback.innerText = "🏳️ I surrendered";
         feedback.style.color = "#fca5a5";    
         feedback.style.fontSize = "1.2rem";  
         
@@ -429,4 +499,5 @@
 
     window.onload = loadNewTurn;
 </script>
+
 {% endblock %}
