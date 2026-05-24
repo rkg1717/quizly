@@ -1696,6 +1696,154 @@ def get_sports_turn():
     
     return jsonify(turn_data)
     
+# --- ---------------------------------------------------------------
+# --- BEGIN WEATHER FORECAST GAME SECTION ---
+# --- ---------------------------------------------------------------
+# app.py
+
+from flask import Flask, render_template, request
+from scenarios import WEATHER_SCENARIOS  
+
+# --- HELPER: SCORING CALCULATION ENGINE ---
+def calculate_weather_score(user_guess, targets):
+    """
+    Compares the user's dialed-in choices against the scenario's true targets.
+    Returns a dictionary with point breakdowns and specific feedback strings.
+    """
+    breakdown = {}
+    total_score = 0
+    
+    # ---- 1. ALERT TYPE SCORING (Max 40 points) ----
+    user_alert = user_guess.get('alert_type')
+    true_alert = targets.get('correct_alert')
+    
+    if user_alert == true_alert:
+        alert_score = 40
+        alert_feedback = "Perfect! You correctly identified the atmospheric threat level."
+    elif (true_alert == "tornado_warning" and user_alert == "severe_warning") or \
+         (true_alert == "severe_warning" and user_alert == "tornado_warning"):
+        alert_score = 20
+        alert_feedback = "Partial Credit. You recognized severe convective activity, but missed the specific hazard profile."
+    elif user_alert == "none" and true_alert != "none":
+        alert_score = 0
+        alert_feedback = "Critical Failure. You left the public completely unprotected during a severe event."
+    else:
+        alert_score = 10
+        alert_feedback = "Misjudged. Your alert type did not align with the atmospheric dynamics."
+        
+    total_score += alert_score
+    breakdown['alert'] = {'score': alert_score, 'feedback': alert_feedback}
+
+    # ---- 2. LEAD TIME SCORING (Max 30 points) ----
+    user_lead = int(user_guess.get('lead_time', 0))
+    ideal_lead = targets.get('ideal_lead_time', 0)
+    
+    if true_alert == "none":
+        if user_lead == 0:
+            lead_score = 30
+            lead_feedback = "Correct. No warning lead time was needed for this scenario."
+        else:
+            lead_score = max(0, 30 - (user_lead * 2))
+            lead_feedback = f"Unnecessary notice. You dialed in {user_lead} mins of lead time for a non-severe event."
+    else:
+        variance = abs(user_lead - ideal_lead)
+        if variance == 0:
+            lead_score = 30
+            lead_feedback = f"Spot on! {user_lead} minutes is the optimal threshold for maximizing public shelter time."
+        elif variance <= 10:
+            lead_score = 20
+            lead_feedback = f"Good lead time ({user_lead} mins). The public has adequate time to react."
+        elif user_lead < ideal_lead:
+            lead_score = 5
+            lead_feedback = f"Dangerous. {user_lead} minutes of lead time leaves the public caught out in the open."
+        else:
+            lead_score = 10
+            lead_feedback = f"Too early. {user_lead} minutes of lead time introduces severe 'false alarm fatigue' risks."
+            
+    total_score += lead_score
+    breakdown['lead_time'] = {'score': lead_score, 'feedback': lead_feedback}
+
+    # ---- 3. HAZARD MAGNITUDE SCORING (Max 30 points - 15 pts each) ----
+    user_hail = user_guess.get('hail_size')
+    true_hail = targets.get('hail_magnitude')
+    
+    user_wind = user_guess.get('wind_speed')
+    true_wind = targets.get('wind_magnitude')
+    
+    # Hail check
+    hail_score = 15 if user_hail == true_hail else (5 if user_hail != "none" and true_hail != "none" else 0)
+    hail_feedback = "Accurate hail size estimation." if hail_score == 15 else f"Incorrect hail classification. Target was {true_hail}."
+    
+    # Wind check
+    wind_score = 15 if user_wind == true_wind else (5 if user_wind != "none" and true_wind != "none" else 0)
+    wind_feedback = "Accurate wind vector assessment." if wind_score == 15 else f"Incorrect wind threshold. Target was {true_wind}."
+    
+    total_score += (hail_score + wind_score)
+    breakdown['magnitude'] = {
+        'score': hail_score + wind_score, 
+        'feedback': f"Hail: {hail_feedback} | Wind: {wind_feedback}"
+    }
+
+    breakdown['total'] = total_score
+    return breakdown
+
+
+# --- ROUTE 1: THE MAIN GAMEPLAY DESK ---
+@app.route('/weather_game')
+def weather_game():
+    # Capture chosen mode ('novice' vs 'experienced')
+    mode = request.args.get('mode', 'novice')
+    
+    # Identify which scenario ID to display
+    scenario_id = int(request.args.get('scenario_id', 1))
+    
+    # Safely extract scenario from imported warehouse
+    current_scenario = WEATHER_SCENARIOS.get(scenario_id)
+    
+    if not current_scenario:
+        return "Scenario not found", 404
+
+    # Feed parameters to forecast.html view file
+    return render_template('forecast.html', scenario=current_scenario, mode=mode, scenario_id=scenario_id)
+
+
+# --- ROUTE 2: THE FORM PROCESSING ENGINE ---
+@app.route('/verify_forecast', methods=['POST'])
+def verify_forecast():
+    # Extract payload from the form
+    user_guess = {
+        'alert_type': request.form.get('alert_type'),
+        'lead_time': request.form.get('lead_time'),
+        'hail_size': request.form.get('hail_size'),
+        'wind_speed': request.form.get('wind_speed')
+    }
+    
+    # Track scenario ID
+    scenario_id = int(request.form.get('scenario_id', 1))
+    from scenarios import WEATHER_SCENARIOS
+    current_scenario = WEATHER_SCENARIOS.get(scenario_id)
+    
+    # Run the processing engine
+    results = calculate_weather_score(user_guess, current_scenario['scoring_targets'])
+    
+    # Clean mapping of internal target values to user-friendly labels for comparison
+    friendly_targets = {
+        'alert': current_scenario['scoring_targets']['correct_alert'].replace('_', ' ').title(),
+        'lead_time': f"{current_scenario['scoring_targets']['ideal_lead_time']} Minutes",
+        'hail': current_scenario['scoring_targets']['hail_magnitude'].replace('_', ' ').title(),
+        'wind': current_scenario['scoring_targets']['wind_magnitude']
+    }
+    
+    # Render template - passing friendy_targets, and keeping scores={} completely safe for the other apps
+    return render_template(
+        'results.html', 
+        scenario=current_scenario, 
+        results=results, 
+        scenario_id=scenario_id, 
+        targets=friendly_targets,
+        scores={}
+    )
+
 if __name__ == "__main__":
     import webbrowser
     # This specifically looks for Chrome. If it fails, it defaults to your system default.

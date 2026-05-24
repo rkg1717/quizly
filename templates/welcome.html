@@ -49,15 +49,14 @@
         justify-content: flex-start;
     }
 
-    .game-image {
-        width: 100%;
-        height: auto;
-        display: block;
-        object-fit: contain;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
+	.game-image {
+		width: 100%;
+		height: 150px;      /* 🔥 forces uniform height */
+		object-fit: cover;  /* 🔥 crops to fit cleanly */
+		border-radius: 6px;
+		margin-bottom: 8px;
+		border: 1px solid rgba(255,255,255,0.1);
+	}
 
     h2 { color: #38bdf8; margin: 4px 0; font-weight: 800; font-size: 1.1rem; line-height: 1.2; }
     p.card-text { color: #94a3b8; font-size: 0.8rem; line-height: 1.3; margin: 0; }
@@ -80,7 +79,7 @@
 			<br> or diving into home repair challenges—select a game below to begin!
 			<br> 
 			<small style="font-size: 0.85rem; font-style: italic; display: block; margin-top: 4px;">
-				<b>🌟 Powered by live AI—expect the unexpected and enjoy the game!</b>
+				<b>🌟 Powered by live AI—expect the unexpected and enjoy the games!</b>
 			</small>
 		</p>
             </small>
@@ -105,6 +104,13 @@
 			<h2>SPORTS RECALL</h2>
 			<p class="card-text">Test your knowledge of iconic athletes, teams, and unforgettable sports moments.</p>
 		</a>
+
+		<a href="/weather_game" class="game-card">
+			<img src="{{ url_for('static', filename='wx_thumb.png') }}" class="game-image" alt="Weather Forecaster">
+			<h2>WEATHER FORECASTER</h2>
+			<p class="card-text">Test your your ability to forecast the weather.</p>
+   		</a>		
+
 	</div>
 
 </div>
