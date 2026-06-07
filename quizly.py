@@ -1459,6 +1459,7 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
     else:
         date_instruction = f"CRITICAL: You MUST select a song released specifically in the {decade} era."
 
+    # FIXED PROMPT: Separates clean search data constraints from the descriptive content
     prompt = f"""
     You are a music historian. Generate ONE high-quality music trivia challenge for a {genre} song.
     
@@ -1471,11 +1472,13 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
     - If {genre} is Jazz: 'Lyric' can be a description of a famous solo or vocal line.
     - If {genre} is Latin: Focus on the specific dance rhythm (e.g., Cha Cha, Songo, Montuno).
 
-    IMPORTANT: All fields (Beat, Lowdown, Lyric, Song, Artist, Year) MUST refer to the SAME single work.
+    CRITICAL FOR SEARCH: The 'Song' and 'Artist' fields MUST contain ONLY the official, standard release names (e.g., Song: Hotel California, Artist: Eagles). No commentary or extra text in those two fields.
+
+    IMPORTANT: All fields (Beat, Lowdown, Lyric, Song, Artist, Year) MUST refer to the SAME single work. Do not reveal titles or artist names inside the hints.
     
     FORMAT EXACTLY:
-    Beat: [A general, atmospheric description of the artist's style and the overall vibe of this specific song without revealing titles or direct names]
-    Lowdown: [Insider fact]
+    Beat: [Describe the song's primary narrative theme, lyrical subject matter, or story concept. Keep it focused on the meaning of the song rather than vague mood words.]
+    Lowdown: [Provide a detailed, 2-to-3 sentence insider fact or historical context about the song. Include things like its charting history, unique studio production lore, sample origins, or cultural impact to give a meaty second hint.]
     Lyric: [Iconic line or melody description]
     Song: [Title]
     Artist: [Composer or Artist]
@@ -1509,7 +1512,7 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
     except Exception as e:
         print(f"Music Engine Error: {e}")
         return {"Beat": "Connection Error", "Lowdown": "The signal was interrupted."}
-
+        
 @app.route('/get_audio_clue/<song_name>/<artist_name>')
 def get_audio_clue(song_name, artist_name):
     # Kept for backward compatibility if template endpoints depend on it
@@ -1699,16 +1702,12 @@ def get_sports_turn():
 # --- ---------------------------------------------------------------
 # --- BEGIN WEATHER FORECAST GAME SECTION ---
 # --- ---------------------------------------------------------------
-# app.py
-
-from flask import Flask, render_template, request
-from scenarios import WEATHER_SCENARIOS  
 
 # --- HELPER: SCORING CALCULATION ENGINE ---
 def calculate_weather_score(user_guess, targets):
     """
     Compares the user's dialed-in choices against the scenario's true targets.
-    Returns a dictionary with point breakdowns and specific feedback strings.
+    Forces strict choice between localized warning thresholds or no warning.
     """
     breakdown = {}
     total_score = 0
@@ -1719,46 +1718,48 @@ def calculate_weather_score(user_guess, targets):
     
     if user_alert == true_alert:
         alert_score = 40
-        alert_feedback = "Perfect! You correctly identified the atmospheric threat level."
-    elif (true_alert == "tornado_warning" and user_alert == "severe_warning") or \
-         (true_alert == "severe_warning" and user_alert == "tornado_warning"):
-        alert_score = 20
-        alert_feedback = "Partial Credit. You recognized severe convective activity, but missed the specific hazard profile."
+        if true_alert == "none":
+            alert_feedback = "Perfect. You correctly stood down; atmospheric profiles indicated only general heavy rain or sub-severe thunderstorms."
+        else:
+            alert_feedback = f"Perfect! You correctly identified the localized {true_alert.replace('_', ' ')} threat."
     elif user_alert == "none" and true_alert != "none":
         alert_score = 0
-        alert_feedback = "Critical Failure. You left the public completely unprotected during a severe event."
-    else:
+        alert_feedback = f"Critical Failure. You left the public completely unprotected during an active {true_alert.replace('_', ' ')} event."
+    elif true_alert == "none" and user_alert != "none":
         alert_score = 10
-        alert_feedback = "Misjudged. Your alert type did not align with the atmospheric dynamics."
+        alert_feedback = "False Alarm. You issued a localized warning, but the dynamics only supported basic rain or low-level thunderstorms."
+    else:
+        alert_score = 20
+        alert_feedback = f"Hazard Mismatch. You initiated convective warning protocols, but misjudged the core threat profile (Target was: {true_alert.replace('_', ' ')})."
         
     total_score += alert_score
     breakdown['alert'] = {'score': alert_score, 'feedback': alert_feedback}
 
     # ---- 2. LEAD TIME SCORING (Max 30 points) ----
-    user_lead = int(user_guess.get('lead_time', 0))
+    user_lead = int(user_guess.get('lead_time', 0) or 0)
     ideal_lead = targets.get('ideal_lead_time', 0)
     
     if true_alert == "none":
         if user_lead == 0:
             lead_score = 30
-            lead_feedback = "Correct. No warning lead time was needed for this scenario."
+            lead_feedback = "Correct. No advanced warning lead time was required for this non-severe routine environment."
         else:
             lead_score = max(0, 30 - (user_lead * 2))
-            lead_feedback = f"Unnecessary notice. You dialed in {user_lead} mins of lead time for a non-severe event."
+            lead_feedback = f"Unnecessary emergency notice. You dialed in {user_lead} mins of lead time for a general rain/thunderstorm profile."
     else:
         variance = abs(user_lead - ideal_lead)
         if variance == 0:
             lead_score = 30
-            lead_feedback = f"Spot on! {user_lead} minutes is the optimal threshold for maximizing public shelter time."
+            lead_feedback = f"Spot on! {user_lead} minutes is the optimal threshold for maximizing public safety reactions."
         elif variance <= 10:
             lead_score = 20
-            lead_feedback = f"Good lead time ({user_lead} mins). The public has adequate time to react."
+            lead_feedback = f"Adequate lead time ({user_lead} mins). The public has time to seek standard shelter."
         elif user_lead < ideal_lead:
             lead_score = 5
-            lead_feedback = f"Dangerous. {user_lead} minutes of lead time leaves the public caught out in the open."
+            lead_feedback = f"Dangerous. Short notice of {user_lead} minutes leaves the public highly exposed."
         else:
             lead_score = 10
-            lead_feedback = f"Too early. {user_lead} minutes of lead time introduces severe 'false alarm fatigue' risks."
+            lead_feedback = f"Excessive notice. {user_lead} minutes introduces false alarm fatigue risks."
             
     total_score += lead_score
     breakdown['lead_time'] = {'score': lead_score, 'feedback': lead_feedback}
@@ -1766,17 +1767,28 @@ def calculate_weather_score(user_guess, targets):
     # ---- 3. HAZARD MAGNITUDE SCORING (Max 30 points - 15 pts each) ----
     user_hail = user_guess.get('hail_size')
     true_hail = targets.get('hail_magnitude')
-    
     user_wind = user_guess.get('wind_speed')
     true_wind = targets.get('wind_magnitude')
     
-    # Hail check
-    hail_score = 15 if user_hail == true_hail else (5 if user_hail != "none" and true_hail != "none" else 0)
-    hail_feedback = "Accurate hail size estimation." if hail_score == 15 else f"Incorrect hail classification. Target was {true_hail}."
+    hail_map = {"none": "none", "quarter": "penny_to_quarter", "golf_ball": "golf_ball_plus", "baseball": "golf_ball_plus"}
+    wind_map = {"none": "none", "60mph": "50_60_mph", "70mph": "70_plus_mph", "80mph": "70_plus_mph"}
     
-    # Wind check
-    wind_score = 15 if user_wind == true_wind else (5 if user_wind != "none" and true_wind != "none" else 0)
-    wind_feedback = "Accurate wind vector assessment." if wind_score == 15 else f"Incorrect wind threshold. Target was {true_wind}."
+    mapped_user_hail = hail_map.get(user_hail, "none")
+    mapped_user_wind = wind_map.get(user_wind, "none")
+    
+    if mapped_user_hail == true_hail:
+        hail_score = 15
+        hail_feedback = "Accurate core hail volume estimation."
+    else:
+        hail_score = 5 if mapped_user_hail != "none" and true_hail != "none" else 0
+        hail_feedback = f"Incorrect classification. Atmospheric boundary verified as: {true_hail.replace('_', ' ')}."
+    
+    if mapped_user_wind == true_wind:
+        wind_score = 15
+        wind_feedback = "Accurate max wind gust boundary mapping."
+    else:
+        wind_score = 5 if mapped_user_wind != "none" and true_wind != "none" else 0
+        wind_feedback = f"Incorrect threshold. Verification data registered as: {true_wind.replace('_', ' ')}."
     
     total_score += (hail_score + wind_score)
     breakdown['magnitude'] = {
@@ -1787,62 +1799,268 @@ def calculate_weather_score(user_guess, targets):
     breakdown['total'] = total_score
     return breakdown
 
+# --- AI WEATHER SCENARIO GENERATOR ENGINE ---
+def generate_ai_weather_scenario(region, month, risk_level, temp=0.7):
+    api_key = get_openai_api_key() 
+    
+    # 1. Immediate local safe fallback data structure if API key is missing
+    fallback_scenario = {
+        "title": "Summer Pulse Convective Outbreak",
+        "briefing": f"A strong surface dynamic boundary is organizing over the {region} region this afternoon. High boundary dew points are fueling local atmospheric instability, supporting rapid supercell development with primary threats including severe wind vectors and localized heavy hail accumulations.",
+        "location": f"{region}",
+        "time_of_day": f"Operational Run — {month}",
+        "modes": {
+            "novice": {
+                "sky_look": f"Towering cumulus clouds are building rapidly to the west over the {region} area.",
+                "instruments": "The digital barometer shows a sharp, continuous pressure drop over the past hour.",
+                "environment": "Winds are turning gusty and shifting directions. Birds have stopped singing."
+            },
+            "experienced": {
+                "discussion": "Mesoscale analysis indicates rapid atmospheric destabilization along the thermal boundary layer.",
+                "dynamics": "Strong low-level moisture convergence combined with shifting upper wind profiles is establishing a highly volatile environment.",
+                "surface_obs": f"Surface stations report temperature spikes and soaring humidity values ahead of the frontal line."
+            }
+        },
+        "scoring_targets": {
+            "correct_alert": "severe_warning",
+            "ideal_lead_time": 25,
+            "hail_magnitude": "penny_to_quarter",
+            "wind_magnitude": "50_60_mph"
+        }
+    }
 
-# --- ROUTE 1: THE MAIN GAMEPLAY DESK ---
+    if not api_key:
+        return fallback_scenario
+        
+    client = OpenAI(api_key=api_key)
+
+    # --- UPGRADED PROMPT: Generates ALL fields ---
+    prompt = f"""
+You are an expert National Weather Service (NWS) lead meteorologist.
+
+Generate ONE complete severe weather simulation scenario with BOTH novice and experienced text fields.
+
+REGION: {region}
+MONTH: {month}
+RISK LEVEL: {risk_level}
+
+REQUIREMENTS:
+- Return plain text only. Do NOT include HTML tags.
+- All fields must be scientifically accurate for the region/month.
+- Each field must be unique (do NOT repeat the same text).
+- Novice fields must NOT reveal the hazard or mention severe storms.
+- Experienced fields SHOULD include technical meteorology (CAPE, CIN, shear, helicity, etc.).
+- Do NOT reveal the scoring answers inside the text.
+
+OUTPUT FORMAT (exactly this structure):
+
+Title: [Short scenario name]
+
+Briefing: [3–4 sentence mesoscale discussion]
+
+NoviceSkyLook: [Plain-language sky description]
+NoviceInstruments: [Backyard instrument clues]
+NoviceEnvironment: [Sensory/environmental clues]
+
+ExpDiscussion: [Technical mesoscale analysis]
+ExpDynamics: [Thermodynamic/kinematic details]
+ExpSurfaceObs: [Surface station observations]
+
+CorrectAlert: [none | severe_warning | tornado_warning]
+IdealLeadTime: [0–60]
+HailMagnitude: [none | penny_to_quarter | golf_ball_plus]
+WindMagnitude: [none | 50_60_mph | 70_plus_mph]
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temp 
+        )
+        text = response.choices[0].message.content.strip()
+        
+        # Robust parsing strategy
+        data = {}
+        lines = text.split('\n')
+        for line in lines:
+            line = line.strip().replace("**", "")
+            if ":" in line:
+                key, val = line.split(":", 1)
+                data[key.strip().lower()] = val.strip().replace('"', '')
+
+        # Extract fields
+        ai_briefing = data.get("briefing", fallback_scenario["briefing"])
+
+        novice_sky = data.get("noviceskylook", fallback_scenario["modes"]["novice"]["sky_look"])
+        novice_instr = data.get("noviceinstruments", fallback_scenario["modes"]["novice"]["instruments"])
+        novice_env = data.get("noviceenvironment", fallback_scenario["modes"]["novice"]["environment"])
+
+        exp_disc = data.get("expdiscussion", fallback_scenario["modes"]["experienced"]["discussion"])
+        exp_dyn = data.get("expdynamics", fallback_scenario["modes"]["experienced"]["dynamics"])
+        exp_surface = data.get("expsurfaceobs", fallback_scenario["modes"]["experienced"]["surface_obs"])
+
+        # --- FINAL SCENARIO OBJECT ---
+        scenario = {
+            "title": data.get("title", "Dynamic Mesoscale Event"),
+            "briefing": ai_briefing,
+            "location": f"{region}",
+            "time_of_day": f"Operational Run — {month}",
+            "modes": {
+                "novice": {
+                    "sky_look": novice_sky,
+                    "instruments": novice_instr,
+                    "environment": novice_env
+                },
+                "experienced": {
+                    "discussion": exp_disc,
+                    "dynamics": exp_dyn,
+                    "surface_obs": exp_surface
+                }
+            },
+            "scoring_targets": {
+                "correct_alert": data.get("correctalert", "none"),
+                "ideal_lead_time": int(data.get("idealleadtime", "0") if data.get("idealleadtime", "0").isdigit() else 0),
+                "hail_magnitude": data.get("hailmagnitude", "none"),
+                "wind_magnitude": data.get("windmagnitude", "none")
+            }
+        }
+
+        return scenario
+
+    except Exception as e:
+        print(f"Weather Engine Connection Glitch: {e}")
+        return fallback_scenario
+
+
+# --- HELPER UTILITY: AUTOMATIC GLOSSARY LINKER ---
+def link_meteorological_terms(text):
+    """
+    Scans the AI briefing text and wraps key technical terms in 
+    interactive glossary anchor tags for the frontend modal dictionary.
+    """
+    # Dictionary of target terms mapping exactly to the JavaScript glossary keys
+    terms_to_link = {
+        "CAPE": "CAPE",
+        "Convective Available Potential Energy": "CAPE",
+        "CIN": "CIN",
+        "Convective Inhibition": "CIN",
+        "Helicity": "Helicity",
+        "SRH": "Helicity",
+        "Storm-Relative Helicity": "Helicity",
+        "dew point": "Dew Point",
+        "dewpoints": "Dew Point",
+        "bulk shear": "Bulk Shear",
+        "wind shear": "Bulk Shear",
+        "dryline": "Dryline",
+        "microburst": "Microburst",
+        "microbursts": "Microburst",
+        "supercell": "Supercell",
+        "supercells": "Supercell"
+    }
+    
+    # Sort keys by length descending so longer phrases get matched before single words
+    for term in sorted(terms_to_link.keys(), key=len, reverse=True):
+        # Case-insensitive replacement that preserves the word's appearance on screen
+        pattern = re.compile(r'\b(' + re.escape(term) + r')\b', re.IGNORECASE)
+        replacement = f'<span class="glossary-term text-info" data-term="{terms_to_link[term]}">\\1</span>'
+        text = pattern.sub(replacement, text)
+        
+    return text
+
+
+# --- THE TWO-STEP WEATHER ROUTE WITH AUTO-LINKING ---
 @app.route('/weather_game')
 def weather_game():
-    # Capture chosen mode ('novice' vs 'experienced')
     mode = request.args.get('mode', 'novice')
+    region = request.args.get('region')
+    month = request.args.get('month')
+    risk_level = request.args.get('risk', 'Slight Risk')
     
-    # Identify which scenario ID to display
-    scenario_id = int(request.args.get('scenario_id', 1))
+    # Step 1: If parameters are missing, serve the clean setup configuration state
+    if not region or not month:
+        return render_template('forecast.html', setup_mode=True, mode=mode)
+        
+    # Step 2: Parameters exist, generate scenario
+    current_scenario = generate_ai_weather_scenario(region, month, risk_level)
     
-    # Safely extract scenario from imported warehouse
-    current_scenario = WEATHER_SCENARIOS.get(scenario_id)
-    
-    if not current_scenario:
-        return "Scenario not found", 404
+    # Automatically convert text terms into interactive links
+    linked_briefing = link_meteorological_terms(current_scenario['briefing'])
+    current_scenario['briefing'] = linked_briefing
 
-    # Feed parameters to forecast.html view file
-    return render_template('forecast.html', scenario=current_scenario, mode=mode, scenario_id=scenario_id)
+    # Link novice fields
+    current_scenario['modes']['novice']['sky_look'] = link_meteorological_terms(
+        current_scenario['modes']['novice']['sky_look']
+    )
+    current_scenario['modes']['novice']['instruments'] = link_meteorological_terms(
+        current_scenario['modes']['novice']['instruments']
+    )
+    current_scenario['modes']['novice']['environment'] = link_meteorological_terms(
+        current_scenario['modes']['novice']['environment']
+    )
 
+    # Link experienced fields
+    current_scenario['modes']['experienced']['discussion'] = link_meteorological_terms(
+        current_scenario['modes']['experienced']['discussion']
+    )
+    current_scenario['modes']['experienced']['dynamics'] = link_meteorological_terms(
+        current_scenario['modes']['experienced']['dynamics']
+    )
+    current_scenario['modes']['experienced']['surface_obs'] = link_meteorological_terms(
+        current_scenario['modes']['experienced']['surface_obs']
+    )
+    
+    session['current_weather_targets'] = current_scenario['scoring_targets']
+    session['current_weather_title'] = current_scenario['title']
+    session['current_weather_briefing'] = current_scenario['briefing']
+    session['current_weather_location'] = current_scenario['location']
+    session['current_weather_time'] = current_scenario['time_of_day']
+    session.modified = True
+
+    return render_template('forecast.html', scenario=current_scenario, mode=mode, setup_mode=False)
 
 # --- ROUTE 2: THE FORM PROCESSING ENGINE ---
 @app.route('/verify_forecast', methods=['POST'])
 def verify_forecast():
-    # Extract payload from the form
     user_guess = {
         'alert_type': request.form.get('alert_type'),
-        'lead_time': request.form.get('lead_time'),
+        'lead_time': request.form.get('lead_time', 0),
         'hail_size': request.form.get('hail_size'),
         'wind_speed': request.form.get('wind_speed')
     }
     
-    # Track scenario ID
-    scenario_id = int(request.form.get('scenario_id', 1))
-    from scenarios import WEATHER_SCENARIOS
-    current_scenario = WEATHER_SCENARIOS.get(scenario_id)
+    scoring_targets = session.get('current_weather_targets', {
+        "correct_alert": "none", "ideal_lead_time": 0, "hail_magnitude": "none", "wind_magnitude": "none"
+    })
     
-    # Run the processing engine
-    results = calculate_weather_score(user_guess, current_scenario['scoring_targets'])
-    
-    # Clean mapping of internal target values to user-friendly labels for comparison
-    friendly_targets = {
-        'alert': current_scenario['scoring_targets']['correct_alert'].replace('_', ' ').title(),
-        'lead_time': f"{current_scenario['scoring_targets']['ideal_lead_time']} Minutes",
-        'hail': current_scenario['scoring_targets']['hail_magnitude'].replace('_', ' ').title(),
-        'wind': current_scenario['scoring_targets']['wind_magnitude']
+    current_scenario = {
+        "title": session.get('current_weather_title', 'Dynamic Scenario'),
+        "briefing": session.get('current_weather_briefing', ''),
+        "location": session.get('current_weather_location', 'Local'),
+        "time_of_day": session.get('current_weather_time', 'N/A')
     }
     
-    # Render template - passing friendy_targets, and keeping scores={} completely safe for the other apps
+    results = calculate_weather_score(user_guess, scoring_targets)
+    
+    friendly_targets = {
+        'alert': scoring_targets['correct_alert'].replace('_', ' ').title(),
+        'lead_time': f"{scoring_targets['ideal_lead_time']} Minutes",
+        'hail': scoring_targets['hail_magnitude'].replace('_', ' ').title(),
+        'wind': scoring_targets['wind_magnitude'].replace('_', ' ').title() if isinstance(scoring_targets['wind_magnitude'], str) else scoring_targets['wind_magnitude']
+    }
+    
     return render_template(
         'results.html', 
         scenario=current_scenario, 
         results=results, 
-        scenario_id=scenario_id, 
         targets=friendly_targets,
+        scenario_id=999,
         scores={}
     )
+
+# --- ---------------------------------------------------------------
+# --- END WEATHER FORECAST GAME SECTION ---
+# --- ---------------------------------------------------------------
 
 if __name__ == "__main__":
     import webbrowser

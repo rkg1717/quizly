@@ -2,25 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Watcher - Forecast Desk</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .glossary-term {
-            border-bottom: 1px dashed #0dcaf0;
-            text-decoration: none;
-            cursor: help;
-        }
-        .dashboard-panel {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid #dee2e6;
-        }
-    </style>
 </head>
+
 <body class="bg-light">
 
-<div class="container-fluid py-4">
+<div class="container py-4">
+
+    {% if setup_mode %}
+    <div class="row justify-content-center py-5">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-secondary">
+                <div class="card-header bg-dark text-white fw-bold d-flex align-items-center">
+                    <span>📡 NWS Mesoscale Initialization Terminal</span>
+                </div>
+                <div class="card-body bg-white p-4">
+                    <p class="text-muted small">Configure regional coordinates and seasonal bounds to establish your live telemetry link.</p>
+                    <hr>
+                    <form action="/weather_game" method="GET">
+                        <input type="hidden" name="mode" value="{{ mode }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small">Target Forecast Domain:</label>
+                            <select class="form-select" name="region" required>
+                                <option value="Midwest Dryline Boundary" selected>Midwest / Great Plains (Dryline Setup)</option>
+                                <option value="Southeast Gulf Coast">Southeast / Gulf Coast (Tropical Moisture)</option>
+                                <option value="Mid-Atlantic Valley Region">Mid-Atlantic Region (High Shear / Terrain)</option>
+                                <option value="Desert Southwest Monsoonal">Desert Southwest (Convective Microbursts)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small">Climatological Month:</label>
+                            <select class="form-select" name="month" required>
+                                <option value="April">April (Early Season Volatility)</option>
+                                <option value="June" selected>June (Peak Summer Solstice)</option>
+                                <option value="August">August (Late Summer Diurnal)</option>
+                                <option value="October">October (Secondary Transitional Autumn)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1 fw-bold py-2">
+                                INITIALIZE STATION RADAR
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary py-2">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
         <div>
             <h1 class="h3 mb-0">Severe Weather Forecast Desk</h1>
@@ -30,10 +66,10 @@
             <span class="me-2 fw-bold">Current Mode:</span>
             {% if mode == 'novice' %}
                 <span class="badge bg-success p-2">Novice Weather Guesser</span>
-                <a href="?mode=experienced" class="btn btn-sm btn-outline-secondary ms-2">Switch to Professional</a>
+                <a href="?mode=experienced&region={{ scenario.location }}&month={{ scenario.time_of_day.split('— ')[1] if '— ' in scenario.time_of_day else scenario.time_of_day }}" class="btn btn-sm btn-outline-secondary ms-2">Switch to Professional</a>
             {% else %}
                 <span class="badge bg-danger p-2">Experienced Forecaster</span>
-                <a href="?mode=novice" class="btn btn-sm btn-outline-secondary ms-2">Switch to Novice</a>
+                <a href="?mode=novice&region={{ scenario.location }}&month={{ scenario.time_of_day.split('— ')[1] if '— ' in scenario.time_of_day else scenario.time_of_day }}" class="btn btn-sm btn-outline-secondary ms-2">Switch to Novice</a>
             {% endif %}
         </div>
     </div>
@@ -47,10 +83,10 @@
                 <div class="card-body">
                     {% if mode == 'novice' %}
                         <h5 class="text-primary">Visual Sky Assessment</h5>
-                        <p>{{ scenario.modes.novice.sky_look }}</p>
+                        <p>{{ scenario.modes.novice.sky_look | safe }}</p>
                         
                         <h5 class="text-primary">Backyard Instruments</h5>
-                        <p>{{ scenario.modes.novice.instruments }}</p>
+                        <p>{{ scenario.modes.novice.instruments | safe }}</p>
                         
                         <h5 class="text-primary">Local Environment & Sensory Signs</h5>
                         <p>{{ scenario.modes.novice.environment }}</p>
@@ -58,15 +94,15 @@
                         <h5 class="text-danger">Thermodynamic Profile</h5>
                         <p>
                             Atmospheric profiling shows a raw 
-                            <a href="#" class="glossary-term text-info" data-term="CAPE">CAPE</a> of 3,400 J/kg 
+                            <span class="glossary-term text-info" data-term="CAPE">CAPE</span> of 3,400 J/kg 
                             with an LI of -7. The afternoon 
-                            <a href="#" class="glossary-term text-info" data-term="CIN">CIN</a> layer is down to -20 J/kg.
+                            <span class="glossary-term text-info" data-term="CIN">CIN</span> layer is down to -20 J/kg.
                         </p>
                         
                         <h5 class="text-danger">Kinematics & Shear Vectors</h5>
                         <p>
                             0-6 km Bulk Shear is measured at 55 knots. Low-level 
-                            <a href="#" class="glossary-term text-info" data-term="Helicity">Helicity</a> (SRH) 
+                            <span class="glossary-term text-info" data-term="Helicity">Helicity</span> (SRH) 
                             is pooling at 320 m²/s² along the boundary.
                         </p>
                         
@@ -80,40 +116,42 @@
 
         <div class="col-md-6">
             <form action="/verify_forecast" method="POST" class="dashboard-panel shadow-sm">
-			<input type="hidden" name="scenario_id" value="{{ scenario_id }}">
                 <h4 class="mb-3 text-dark border-bottom pb-2">🎛️ Warning Issuance Panel</h4>
                 
                 <div class="mb-4">
                     <label class="form-label d-block fw-bold">Select Alert Level:</label>
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="alert_type" id="alert1" value="none" checked>
-                        <label class="form-check-label" for="alert1">No Warning / Convective Outlook Sufficient</label>
+                        <label class="form-check-label" for="alert1">
+                            <strong>No Warning Required</strong> <span class="text-muted">(Routine Rain / Sub-Severe Thunderstorms)</span>
+                        </label>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert2" value="severe_watch">
-                        <label class="form-check-label" for="alert2">Severe Thunderstorm Watch</label>
-                    </div>
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="alert_type" id="alert3" value="severe_warning">
-                        <label class="form-check-label" for="alert3">Severe Thunderstorm Warning</label>
+                        <label class="form-check-label" for="alert3">
+                            <span class="text-warning">⚠️</span> <strong>Severe Thunderstorm Warning</strong> <span class="text-muted">(Damaging Winds / Large Hail)</span>
+                        </label>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert4" value="tornado_watch">
-                        <label class="form-check-label" for="alert4">Tornado Watch</label>
-                    </div>
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="alert_type" id="alert5" value="tornado_warning">
-                        <label class="form-check-label" for="alert5">Tornado Warning</label>
+                        <label class="form-check-label" for="alert5">
+                            <span class="text-danger">🌪️</span> <strong>Tornado Warning</strong> <span class="text-muted">(Imminent Rotation / Core Threat)</span>
+                        </label>
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label for="leadTime" class="form-label fw-bold">Target Public Lead Time:</label>
-                    <input type="range" class="form-range" min="0" max="60" step="5" id="leadTime" name="lead_time" value="0">
-                    <div class="d-flex justify-content-between">
-                        <small>Immediate (0 min)</small>
-                        <span class="badge bg-dark" id="leadTimeDisplay">0 Minutes</span>
-                        <small>Max Notice (60 min)</small>
+                <div class="mb-4 p-3 border rounded bg-white">
+                    <label for="leadTime" class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
+                        <span>⏱️ Target Public Lead Time:</span>
+                        <span class="badge bg-primary fs-6" id="leadTimeDisplay">0 Minutes</span>
+                    </label>
+                    <div class="py-2">
+                        <input type="range" class="custom-slider" min="0" max="60" step="5" id="leadTime" name="lead_time" value="0">
+                    </div>
+                    <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.85rem;">
+                        <span>Immediate (0 min)</span>
+                        <span>Standard Notice</span>
+                        <span>Max Notice (60 min)</span>
                     </div>
                 </div>
 
@@ -130,23 +168,30 @@
                     <div class="col-sm-6">
                         <label class="form-label fw-bold small">Max Wind Gusts:</label>
                         <select class="form-select form-select-sm" name="wind_speed">
-                            <option value="none">Sub-Severe (<50 mph)</option>
+                            <option value="none">Sub-Severe (&lt;50 mph)</option>
                             <option value="60mph">60 mph Gusts</option>
                             <option value="70mph">70 mph Gusts</option>
                             <option value="80mph">80+ mph (Destructive)</option>
                         </select>
                     </div>
                 </div>
-					<div class="mt-4 d-flex gap-2">
-			<button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-bold">TRANSMIT ADVISORY TO PUBLIC</button>
-			
-			<form method="get" action="{{ url_for('end_game') }}" class="m-0 p-0">
-				<button type="submit" class="btn btn-danger py-2 px-4 fw-bold" style="height: 100%;">Quit</button>
-			</form>
-		</div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-bold">
+                        TRANSMIT ADVISORY TO PUBLIC
+                    </button>
+                    <a href="/" class="btn btn-danger py-2 px-4 fw-bold">
+                       Quit
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
+    {% endif %}
+
 </div>
 
+<!-- Glossary Modal -->
 <div class="modal fade" id="glossaryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -154,86 +199,61 @@
                 <h5 class="modal-title" id="glossaryTitle">Meteorological Dictionary</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="glossaryBody">
-                </div>
+            <div class="modal-body" id="glossaryBody"></div>
         </div>
     </div>
 </div>
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Lead Time Slider Script -->
 <script>
-    // Slider real-time number display update
-    const slider = document.getElementById('leadTime');
-    const display = document.getElementById('leadTimeDisplay');
-    slider.addEventListener('input', function() {
-        display.innerText = this.value + ' Minutes';
-    });
-
-    // Glossary Dictionary Object
-    const glossary = {
-        "CAPE": "<strong>Convective Available Potential Energy:</strong> A direct measure of instability in the troposphere. Values ranging from 2,500 to 4,000+ J/kg signal extreme energy ready to fuel severe updrafts.",
-        "CIN": "<strong>Convective Inhibition:</strong> A negative energy layer acting as a atmospheric 'cap' or lid. It prevents storms from developing prematurely, often resulting in explosive storm growth if broken later in the day.",
-        "Helicity": "<strong>Storm-Relative Helicity (SRH):</strong> A calculation of low-level wind shear and spin configuration. High numbers (>250 m²/s²) imply that atmospheric winds change speed and direction rapidly with height, causing updrafts to rotate smoothly into supercells."
-    };
-
-    // Global Modal Click Event Trigger
-    document.querySelectorAll('.glossary-term').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const term = this.getAttribute('data-term');
-            document.getElementById('glossaryTitle').innerText = term + ' Definition';
-            document.getElementById('glossaryBody').innerHTML = glossary[term] || "Term definition missing.";
-            
-            var targetModal = new bootstrap.Modal(document.getElementById('glossaryModal'));
-            targetModal.show();
-        });
-    });
+document.getElementById("leadTime").addEventListener("input", function () {
+    document.getElementById("leadTimeDisplay").innerText = this.value + " Minutes";
+});
 </script>
-</body>
-</html>
-<p>
-  The morning sounding shows a raw 
-  <a href="#" class="text-info weather-term" data-term="CAPE">CAPE</a> 
-  of 3,500 J/kg, but a stubborn 
-  <a href="#" class="text-info weather-term" data-term="CIN">CIN</a> 
-  layer is holding it back.
-</p>
 
-<div class="modal fade" id="glossaryModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="glossaryTitle">Term Definition</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="glossaryBody">
-        </div>
-    </div>
-  </div>
-</div>
-
+<!-- Unified Glossary Script -->
 <script>
-  // A clean dictionary of your definitions
-  const glossary = {
-    "CAPE": "<strong>Convective Available Potential Energy:</strong> A measure of atmospheric instability. Higher values (above 2,000 J/kg) represent a highly volatile atmosphere capable of fueling explosive storm updrafts.",
-    "CIN": "<strong>Convective Inhibition:</strong> The atmospheric 'cap' or lid that prevents air parcels from rising. A strong cap can completely suppress storms, or cause them to explode violently if broken.",
-    "Helicity": "<strong>Storm-Relative Helicity (SRH):</strong> A measure of the potential for cyclonic rotation in storm updrafts. High helicity numbers indicate that the wind environment is primed for spinning storms (supercells)."
-  };
+fetch("/static/wx-glossary.json")
+  .then(response => response.json())
+  .then(glossary => {
 
-  // Listen for clicks on any weather term
-  document.querySelectorAll('.weather-term').forEach(item => {
-    item.addEventListener('click', function(e) {
-      e.preventDefault();
-      const term = this.getAttribute('data-term');
-      
-      // Inject the title and definition into the modal
-      document.getElementById('glossaryTitle').innerText = term;
-      document.getElementById('glossaryBody').innerHTML = glossary[term] || "Definition not found.";
-      
-      // Show the modal
-      var myModal = new bootstrap.Modal(document.getElementById('glossaryModal'));
-      myModal.show();
-    });
+      // Tooltip setup
+      document.querySelectorAll('.glossary-term').forEach(term => {
+          const key = term.dataset.term;
+          term.setAttribute("data-bs-toggle", "tooltip");
+          term.setAttribute("data-bs-title", glossary[key] || "Definition not found");
+      });
+
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      [...tooltipTriggerList].forEach(el => new bootstrap.Tooltip(el));
+
+      // Click-to-open modal
+      document.querySelectorAll('.glossary-term').forEach(item => {
+          item.addEventListener('click', function(e) {
+              e.preventDefault();
+
+              const rawTerm = this.getAttribute('data-term');
+              if (!rawTerm) return;
+
+              const termKey = rawTerm.trim();
+              const lookupValue =
+                    glossary[termKey] ||
+                    glossary[termKey.toLowerCase()] ||
+                    "Definition not found";
+
+              document.getElementById('glossaryTitle').innerText = termKey;
+              document.getElementById('glossaryBody').innerHTML = lookupValue;
+
+              const modal = new bootstrap.Modal(document.getElementById('glossaryModal'));
+              modal.show();
+          });
+      });
+
   });
 </script>
+
+</body>
+</html>
