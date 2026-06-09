@@ -961,11 +961,6 @@ def fixit_setup():
     # 4. GO DIRECTLY TO THE GAME (No more redirecting back to setup!)
     return redirect(url_for("game"))
 
-# 4. THE MUSIC RECALL GAME
-@app.route('/music_recall')
-def music_recall():
-    return render_template('music_recall.html')
-
 # --- HELPER FUNCTIONS ---
 def choose_category_no_recent(categories, history, window=6):
     recent = history[-window:]
@@ -1386,12 +1381,36 @@ def goodbye():
 # --- ---------------------------------------------------------------
 # --- BEGIN MUSIC GAME SECTION ---
 # --- ---------------------------------------------------------------
-
 @app.route('/get_music_turn', methods=['POST'])
 def get_music_turn():
     data = request.json or {}
-    genre = data.get('genre', 'Country')
-    decade = data.get('decade', 'Random')
+    
+    # Initialize session state flags if not present
+    if 'music_turn_locked' not in session:
+        session['music_turn_locked'] = False
+
+    # --- THE FIXED SELECTION LOGIC ---
+    if data.get('genre') and data.get('decade'):
+        genre = data.get('genre')
+        decade = data.get('decade')
+        session['locked_genre'] = genre
+        session['locked_decade'] = decade
+        session['music_turn_locked'] = True
+        session.modified = True
+
+    elif session.get('music_turn_locked'):
+        # MID-TURN REQUEST: Strictly use what was locked in the session.
+        genre = session.get('locked_genre')
+        decade = session.get('locked_decade')
+        
+        # Emergency safety catch: If the lock exists but data is missing, break the lock
+        if not genre or not decade:
+            session['music_turn_locked'] = False
+            session.modified = True
+            return jsonify({"error": "Game state was locked but no genre/decade was saved. Please try restarting tracking."}), 400
+            # 👇 ADD THIS ELSE BLOCK HERE TO CATCH EMPTY REQUESTS 👇
+    else:
+        return jsonify({"error": "No data sent and session not locked. Check JavaScript payload."}), 400
 
     if 'history' not in session:
         session['history'] = []
@@ -1413,7 +1432,6 @@ def get_music_turn():
         
         if song_title not in session['history'] and song_title != "":
             # --- SHIFTING AUDIO CLUE TO THE FIRST CLUE POSITION ---
-            # Fetch the preview URL right here so it can be served immediately
             search_url = "https://itunes.apple.com/search"
             query = f"{song_data.get('Song')} {artist_name}"
             params = {"term": query, "limit": 1, "media": "music"}
@@ -1427,12 +1445,10 @@ def get_music_turn():
             except Exception as e:
                 print(f"iTunes background fetch error: {e}")
             
-            # Attach the audio snippet path directly to the primary payload
             song_data["AudioSnippet"] = preview_url
             
-            # Print to terminal for verification
             print("\n" + "="*40)
-            print(f"🎵 NEW MUSIC TARGET MASTER ANSWER:")
+            print(f"🎵 NEW MUSIC TARGET MASTER ANSWER (LOCKED TO: {genre} / {decade}):")
             print(f"   Artist: {song_data.get('Artist')}")
             print(f"   Song:   {song_data.get('Song')}")
             print(f"   Audio:  {preview_url}")
@@ -1445,6 +1461,19 @@ def get_music_turn():
             return jsonify(song_data)
 
     return jsonify(song_data)
+
+
+@app.route('/reset_music_lock', methods=['POST'])
+def reset_music_lock():
+    """
+    Call this route from JavaScript when the player clicks "Next Track".
+    It unlocks the state so the player is required to pick a genre/decade again.
+    """
+    session['music_turn_locked'] = False
+    session.pop('locked_genre', None)
+    session.pop('locked_decade', None)
+    session.modified = True
+    return jsonify({"status": "unlocked", "message": "Ready for next track selections."})
   
 # --- MUSIC RECALL ENGINE ---
 def generate_music_challenge(genre, decade="Random", temp=0.7):
@@ -1460,6 +1489,7 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
         date_instruction = f"CRITICAL: You MUST select a song released specifically in the {decade} era."
 
     # FIXED PROMPT: Separates clean search data constraints from the descriptive content
+
     prompt = f"""
     You are a music historian. Generate ONE high-quality music trivia challenge for a {genre} song.
     
@@ -1477,7 +1507,7 @@ def generate_music_challenge(genre, decade="Random", temp=0.7):
     IMPORTANT: All fields (Beat, Lowdown, Lyric, Song, Artist, Year) MUST refer to the SAME single work. Do not reveal titles or artist names inside the hints.
     
     FORMAT EXACTLY:
-    Beat: [Describe the song's primary narrative theme, lyrical subject matter, or story concept. Keep it focused on the meaning of the song rather than vague mood words.]
+    Beat: [Describe the musical essence of the track. For vocal tracks, briefly summarize the lyrical theme or story concept. For instrumental tracks (like Jazz or Classical), DO NOT invent a lyrical story; instead, describe the specific instrumentation, tempo, rhythmic energy, and distinctive musical style (e.g., syncopated percussion, soaring saxophones, modal chord changes) that defines the track.]
     Lowdown: [Provide a detailed, 2-to-3 sentence insider fact or historical context about the song. Include things like its charting history, unique studio production lore, sample origins, or cultural impact to give a meaty second hint.]
     Lyric: [Iconic line or melody description]
     Song: [Title]
@@ -1528,10 +1558,13 @@ def get_audio_clue(song_name, artist_name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route("/music_recall")
-def music_recall_route():
-    print("DEBUG: User is attempting to load /music_recall")
-    return render_template("music_recall.html")
+@app.route('/music_recall')
+def music_recall():
+    # Clear out any old song data from the session so we start fresh
+    session.pop('current_song', None)
+    
+    # Just render the page. DO NOT call your LLM or song generation function here!
+    return render_template('music_recall.html')
     
 # --- ---------------------------------------------------------------
 # --- BEGIN SPORTS GAME SECTION ---

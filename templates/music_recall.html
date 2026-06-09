@@ -194,47 +194,51 @@ html, body {
 </style>
 
 <div class="music-recall-container">
-	<div style="text-align: center; margin-top: 0; padding: 0 5px;">
-		<div style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
-			MUSIC RECALL
-		</div>
+    <div style="text-align: center; margin-top: 0; padding: 0 5px;">
+        <div style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
+            MUSIC RECALL
+        </div>
+    </div>
 
-		<div style="font-size: 0.9rem; font-weight: 500; color: #38bdf8; margin-top: 6px; line-height: 1.45; white-space: normal;">
-			<span style="font-weight: 700;">1.</span> Select the genre and decade to let AI pick a song and artist <span style="font-size: 0.8rem; opacity: 0.85;">(slide right if needed)</span>.<br>
-			<span style="font-weight: 700;">2.</span> Scroll down to select additional clues or enter your guess in the <span style="font-weight: 700;">'Ready to Recall'</span> box or select <span style="font-weight: 700;">'I Give Up'.
-			<p style="font-size: 0.8rem; font-style: italic; margin-top: 4px; margin-bottom: 0; opacity: 0.9;">
-				(Points are awarded based on how many clues you use; zero points if you 'Give Up')
-			</p>
-		</div>
-	</div>
+    <div style="font-size: 0.9rem; font-weight: 500; color: #38bdf8; margin: 15px 0 10px 0; text-align: center; line-height: 1.45;">
+        <span style="font-weight: 700;">1.</span> Select a genre and a decade below, then click <span style="font-weight: 700; color: #10b981;">'START TRACKING'</span>.<br>
+        <span style="font-weight: 700;">2.</span> Scroll down to request clues or enter your guess in the <span style="font-weight: 700;">'Ready to Recall'</span> box.
+    </div>
     
-	<div class="genre-nav" id="genre-nav">
-		<a href="#" class="genre-link active" onclick="setGenre(event, this, 'Country'); return false;">COUNTRY</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Rock'); return false;">ROCK</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Jazz'); return false;">JAZZ</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'R&B'); return false;">R&B</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Latin'); return false;">LATIN</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Folk'); return false;">FOLK</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Pop'); return false;">POP</a>
-		<a href="#" class="genre-link" onclick="setGenre(event, this, 'Hip-Hop'); return false;">HIP-HOP</a>
-		<a href="#" class="genre-link" onclick="setClassical(event, this, 'Classical'); return false;">CLASSICAL</a>
-	</div>
+    <div class="genre-nav" id="genre-nav">
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Country'); return false;">COUNTRY</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Rock'); return false;">ROCK</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Jazz'); return false;">JAZZ</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'R&B'); return false;">R&B</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Latin'); return false;">LATIN</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Folk'); return false;">FOLK</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Pop'); return false;">POP</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Hip-Hop'); return false;">HIP-HOP</a>
+        <a href="#" class="genre-link" onclick="setGenre(event, this, 'Classical'); return false;">CLASSICAL</a>
+    </div>
 
-	<div class="genre-nav" id="decade-nav">
-		<a href="#" class="genre-link active" onclick="setDecade(event, this, 'Random'); return false;">RANDOM</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '1950s'); return false;">50s</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '1960s'); return false;">60s</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '1970s'); return false;">70s</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '1980s'); return false;">80s</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '1990s'); return false;">90s</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '2000s'); return false;">00s</a>
-		<a href="#" class="genre-link" onclick="setDecade(event, this, '2010s'); return false;">10s</a>
-	</div>
+    <div class="genre-nav" id="decade-nav">
+        <a href="#" class="genre-link" onclick="setDecade(event, this, 'Random'); return false;">RANDOM</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1950s'); return false;">50s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1960s'); return false;">60s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1970s'); return false;">70s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1980s'); return false;">80s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '1990s'); return false;">90s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '2000s'); return false;">00s</a>
+        <a href="#" class="genre-link" onclick="setDecade(event, this, '2010s'); return false;">10s</a>
+    </div>
 
-    <div id="game-board">
-		<div class="reveal-box">
+    <div id="start-action-container" style="margin-bottom: 20px; text-align: center;">
+        <button id="start-tracking-btn" onclick="startGameLoop()" class="btn-primary" 
+                style="background: #10b981; color: #020617; font-weight: 900; max-width: 250px; margin: 0 auto; display: block;" disabled>
+            START TRACKING
+        </button>
+    </div>
+
+    <div id="game-board" style="display: none;">
+        <div class="reveal-box">
             <div class="label">Clue 1: Song Theme & Audio Sample</div>
-            <div id="beat-display" class="beat-text" style="margin-bottom: 15px;">ANALYZING...</div>
+            <div id="beat-display" class="beat-text" style="margin-bottom: 15px;">&nbsp;</div>
             
             <div id="mediaClueContainer" style="display:none; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
                 <p id="audio-cost-warning" style="font-size: 0.8rem; color: #fca5a5; font-style: italic; margin: 0 0 10px 0; font-weight: 600;">
@@ -250,7 +254,7 @@ html, body {
                 </button>
             </div>
         </div>
-		
+        
         <audio id="audioPlayer" hidden>
             <source id="audioSource" src="" type="audio/mpeg">
         </audio>
@@ -265,35 +269,35 @@ html, body {
             <div id="lyric-display" style="font-size: 1.1rem; font-style: italic; line-height: 1.5;"></div>
         </div>
 
-<div id="answer-box" class="reveal-box hidden" style="margin-bottom: 10px;">
-    <div class="label">Identity Confirmed</div>
-    <div id="song-answer" style="font-size: 1.4rem; font-weight: 800; color: var(--cobalt);"></div>
-    <div id="artist-details" style="color: var(--text-dim); margin-top: 4px;"></div>
-</div>
+        <div id="answer-box" class="reveal-box hidden" style="margin-bottom: 10px;">
+            <div class="label">Identity Confirmed</div>
+            <div id="song-answer" style="font-size: 1.4rem; font-weight: 800; color: var(--cobalt);"></div>
+            <div id="artist-details" style="color: var(--text-dim); margin-top: 4px;"></div>
+        </div>
 
-<div style="display: flex; justify-content: space-between; margin: 0 5px 10px 5px; font-weight: 800;">
-    <span style="color: var(--text-dim);">
-        SCORE: <span id="player-score" style="color: var(--cobalt);">0</span>
-    </span>
-    <span style="color: var(--text-dim);">
-        STREAK: <span id="player-streak" style="color: #ffffff;">0</span>
-    </span>
-</div>
+        <div style="display: flex; justify-content: space-between; margin: 0 5px 10px 5px; font-weight: 800;">
+            <span style="color: var(--text-dim);">
+                SCORE: <span id="player-score" style="color: var(--cobalt);">0</span>
+            </span>
+            <span style="color: var(--text-dim);">
+                STREAK: <span id="player-streak" style="color: #ffffff;">0</span>
+            </span>
+        </div>
 
-<div id="feedback-text" style="font-weight: 800; text-align: center; font-size: 2rem;"></div>
+        <div id="feedback-text" style="font-weight: 800; text-align: center; font-size: 2rem;"></div>
 
-<div id="guess-section" class="reveal-box sticky-guess" style="margin-top: 10px;">
-    <div class="label" style="color: #10b981; margin-bottom: 8px;">
-        READY TO RECALL? (<span id="pts-display">100</span> PTS)
-    </div>
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="user-guess" placeholder="Artist or Song name...">
-        <button id="submit-btn" onclick="checkGuess()"
-            style="background: #10b981; color: #020617; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
-            SUBMIT
-        </button>
-    </div>
-</div>
+        <div id="guess-section" class="reveal-box sticky-guess" style="margin-top: 10px;">
+            <div class="label" style="color: #10b981; margin-bottom: 8px;">
+                READY TO RECALL? (<span id="pts-display">100</span> PTS)
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="user-guess" placeholder="Artist or Song name...">
+                <button id="submit-btn" onclick="checkGuess()"
+                    style="background: #10b981; color: #020617; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase;">
+                    SUBMIT
+                </button>
+            </div>
+        </div>
 
         <div style="margin-top: 20px; text-align: center;">
             <button id="clue-btn" onclick="handleClueRequest(event)" class="btn-primary"
@@ -321,14 +325,17 @@ html, body {
 
 <script>
     let currentStage = 1;
-    let selectedGenre = 'Country';
-    let selectedDecade = 'Random'; 
+    let selectedGenre = '';
+    let selectedDecade = ''; 
     let score = 0;
     let streak = 0; 
     let pointsPossible = 100; 
     let currentSongData = {};
     let audioPlayerElement = null;
     let turnOver = false;
+
+    let genreHasBeenSelected = false;
+    let decadeHasBeenSelected = false;
 
     // --- FUZZY MATCH ENGINE ---
     function getLevenshteinDistance(a, b) {
@@ -342,9 +349,9 @@ html, body {
                     matrix[i][j] = matrix[i - 1][j - 1];
                 } else {
                     matrix[i][j] = Math.min(
-                        matrix[i - 1][j - 1] + 1, // substitution
-                        matrix[i][j - 1] + 1,     // insertion
-                        matrix[i - 1][j] + 1      // deletion
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
                     );
                 }
             }
@@ -378,12 +385,67 @@ html, body {
         return matchRatio >= 0.70;
     }
 
+	// --- INITIALIZE GAME STATE ---
+    function initGame() {
+        turnOver = false; 
+        
+        // Remove or comment out these 4 lines so clicking start doesn't wipe your selections!
+        // genreHasBeenSelected = false;
+        // decadeHasBeenSelected = false;
+        // selectedGenre = '';
+        // selectedDecade = '';
+      
+        // Reset navigation bar buttons back to unselected grey states
+        // document.querySelectorAll('.genre-nav .genre-link').forEach(el => el.classList.remove('active'));
+        
+        setSelectionLock(false);
+        
+        // Hide game board container entirely until the generation button is struck
+        document.getElementById('game-board').style.display = "none";
+        
+        const startBtn = document.getElementById('start-tracking-btn');
+        if (startBtn) {
+            startBtn.disabled = true;
+            startBtn.style.display = "block";
+        }
+        
+        document.getElementById('mediaClueContainer').style.display = "none";
+        document.getElementById('replayContainer').style.display = "none";
+        document.getElementById('clue-btn').style.display = "none";
+        document.getElementById('reveal-btn').style.display = "none";
+        document.getElementById('next-btn').style.display = "none";
+        
+        document.getElementById('player-score').innerText = score;
+        document.getElementById('player-streak').innerText = streak;
+    }
+
+    // --- HELPER TO LOCK/UNLOCK GENRE & DECADE SELECTIONS ---
+    function setSelectionLock(shouldLock) {
+        const pointerValue = shouldLock ? "none" : "auto";
+        const opacityValue = shouldLock ? "0.4" : "1";
+        
+        const elements = [document.getElementById('genre-nav'), document.getElementById('decade-nav')];
+        elements.forEach(el => {
+            if (el) {
+                el.style.pointerEvents = pointerValue;
+                el.style.opacity = opacityValue;
+            }
+        });
+    }
+
+    function checkReadyToStart() {
+        if (genreHasBeenSelected && decadeHasBeenSelected) {
+            document.getElementById('start-tracking-btn').disabled = false;
+        }
+    }
+
     function setGenre(event, element, genre) {
         if (event) event.preventDefault();
         document.querySelectorAll('#genre-nav .genre-link').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
         selectedGenre = genre;
-        loadNewSong();
+        genreHasBeenSelected = true;
+        checkReadyToStart(); 
     }
 
     function setDecade(event, element, decade) {
@@ -391,11 +453,27 @@ html, body {
         document.querySelectorAll('#decade-nav .genre-link').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
         selectedDecade = decade;
+        decadeHasBeenSelected = true;
+        checkReadyToStart(); 
+    }
+
+    function startGameLoop() {
+        document.getElementById('start-tracking-btn').style.display = "none";
+        // Reveal the game window immediately and add our working notice dynamically
+        document.getElementById('game-board').style.display = "block";
+        document.getElementById('beat-display').innerText = "ANALYZING...";
         loadNewSong();
     }
 
-    // --- GAME LIFE CYCLE RESTORED TRACKERS ---
+// --- GAME LIFE CYCLE ENGINE ---
     async function loadNewSong() {
+        // 1. CLEAR OLD FRONTEND MEMORY IMMEDIATELY SO IT CAN'T LEAK INTO THE NEW TURN
+        currentSongData = {}; 
+		// 2. CLEAR THE OLD CLUE 1 TEXT FROM THE SCREEN IMMEDIATELY
+        document.getElementById('beat-display').innerHTML = "&nbsp;";
+
+        setSelectionLock(true);
+
         const feedback = document.getElementById('feedback-text');
         if (feedback) {
             feedback.innerText = "";
@@ -430,15 +508,14 @@ html, body {
             if (el) el.classList.add('hidden');
         });
 
-        // Hide both player wrapper containers during load tracking setup
         document.getElementById('mediaClueContainer').style.display = "none";
         document.getElementById('replayContainer').style.display = "none";
-        document.getElementById('beat-display').innerText = "ANALYZING...";
         document.getElementById('player-score').innerText = score;
         document.getElementById('player-streak').innerText = streak;
 
-        try {
-            const response = await fetch('/get_music_turn', {
+		try {
+            // Add a timestamp query parameter (?_=[timestamp]) to defeat browser caching
+            const response = await fetch('/get_music_turn?_=' + new Date().getTime(), {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ genre: selectedGenre, decade: selectedDecade }) 
@@ -446,12 +523,17 @@ html, body {
 
             currentSongData = await response.json();
 
-            document.getElementById('beat-display').innerText = currentSongData.Beat;
+            // Explicitly force the text update right here
+            const beatDisplay = document.getElementById('beat-display');
+            if (beatDisplay) {
+                beatDisplay.innerText = currentSongData.Beat;
+            }
+            
             document.getElementById('lowdown-display').innerText = currentSongData.Lowdown;
             document.getElementById('lyric-display').innerText = `"${currentSongData.Lyric}"`;
             document.getElementById('song-answer').innerText = currentSongData.Song;
             document.getElementById('artist-details').innerText = `${currentSongData.Artist} (${currentSongData.Year})`;
-
+			
             if (currentSongData.AudioSnippet) {
                 const audio = document.getElementById("audioPlayer");
                 const source = document.getElementById("audioSource");
@@ -461,7 +543,6 @@ html, body {
                 audio.volume = 0.9;
                 audioPlayerElement = audio;
 
-                // Restore cost label structures back to visible on start
                 const warningLine = document.getElementById("audio-cost-warning");
                 if (warningLine) warningLine.style.display = "block";
 
@@ -470,6 +551,7 @@ html, body {
 
         } catch (e) {
             document.getElementById('beat-display').innerText = "SYSTEM ERROR.";
+            setSelectionLock(false);
         }
     }
 
@@ -478,9 +560,8 @@ html, body {
         if (!audioPlayerElement) return;
         
         document.getElementById("mediaClueContainer").style.display = "none";
-        document.getElementById("replayContainer").style.display = "block"; // Explicit container target active
+        document.getElementById("replayContainer").style.display = "block"; 
         
-        // Apply the specific -25 point penalty only if snippet is chosen inside Clue 1 bounds
         if (currentStage === 1) {
             pointsPossible = 75;
             document.getElementById('pts-display').innerText = pointsPossible;
@@ -524,14 +605,12 @@ html, body {
         
         currentStage++;
 
-        // Strict score grid limits tracking
         if (currentStage === 2) {
             pointsPossible = 50; 
             document.getElementById('stage-2').classList.remove('hidden');
             clueBtn.innerText = "I NEED ANOTHER CLUE. (25 PTS)";
             document.getElementById('reveal-btn').style.display = "block";
             
-            // Clean up old point penalty lines if skipping Clue 1 audio entirely
             const warningLine = document.getElementById("audio-cost-warning");
             if (warningLine) warningLine.style.display = "none";
             
@@ -599,12 +678,26 @@ html, body {
         document.getElementById('next-btn').style.display = "block";
     }
 
-    function nextTrack() {
+	async function nextTrack() {
         document.getElementById('feedback-text').innerText = "";
-        loadNewSong();
-    }
+        
+        try {
+            await fetch('/reset_music_lock', { method: 'POST' });
+        } catch(e) {
+            console.error("Backend lock reset error:", e);
+        }
 
-    window.onload = loadNewSong;
+        // Clean selections here for the NEXT round
+        selectedGenre = '';
+        selectedDecade = '';
+        genreHasBeenSelected = false;
+        decadeHasBeenSelected = false;
+        document.querySelectorAll('.genre-nav .genre-link').forEach(el => el.classList.remove('active'));
+
+        setSelectionLock(false);
+        initGame();
+    }
+	
 </script>
 
 {% endblock %}
