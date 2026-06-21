@@ -1408,6 +1408,7 @@ def get_music_turn():
             session['music_turn_locked'] = False
             session.modified = True
             return jsonify({"error": "Game state was locked but no genre/decade was saved. Please try restarting tracking."}), 400
+            # 👇 ADD THIS ELSE BLOCK HERE TO CATCH EMPTY REQUESTS 👇
     else:
         return jsonify({"error": "No data sent and session not locked. Check JavaScript payload."}), 400
 
@@ -1424,9 +1425,8 @@ def get_music_turn():
     else:
         dynamic_temp = start_temp + ((end_temp - start_temp) / ramp_up_turns) * current_turn
 
-    # Pass session['history'] into the generator so the LLM knows what to avoid!
     for _ in range(3):
-        song_data = generate_music_challenge(genre, decade, dynamic_temp, session['history'])
+        song_data = generate_music_challenge(genre, decade, dynamic_temp)
         song_title = song_data.get('Song', '').strip().lower()
         artist_name = song_data.get('Artist', '').strip()
         
@@ -1476,7 +1476,7 @@ def reset_music_lock():
     return jsonify({"status": "unlocked", "message": "Ready for next track selections."})
   
 # --- MUSIC RECALL ENGINE ---
-def generate_music_challenge(genre, decade="Random", temp=0.7, history_list=None):
+def generate_music_challenge(genre, decade="Random", temp=0.7):
     api_key = get_openai_api_key()
     if not api_key:
         return {"Beat": "API Key Missing", "Lowdown": "Check your configuration."}
@@ -1488,19 +1488,13 @@ def generate_music_challenge(genre, decade="Random", temp=0.7, history_list=None
     else:
         date_instruction = f"CRITICAL: You MUST select a song released specifically in the {decade} era."
 
-    # Build history avoidance instruction
-    history_instruction = ""
-    if history_list:
-        # Format list to clean string titles
-        forbidden_songs = ", ".join([f"'{s}'" for s in history_list])
-        history_instruction = f"CRITICAL AVOIDANCE: Do NOT choose any of the following songs under any circumstances: {forbidden_songs}."
+    # FIXED PROMPT: Separates clean search data constraints from the descriptive content
 
     prompt = f"""
     You are a music historian. Generate ONE high-quality music trivia challenge for a {genre} song.
     
     CHRONOLOGICAL VARIETY: 
     - {date_instruction}
-    - {history_instruction}
     - Do NOT always pick the #1 hit; rotate between legendary classics, hidden gems, and era-defining tracks.
     
     SPECIAL INSTRUCTIONS FOR GENRES:
@@ -1513,8 +1507,7 @@ def generate_music_challenge(genre, decade="Random", temp=0.7, history_list=None
     IMPORTANT: All fields (Beat, Lowdown, Lyric, Song, Artist, Year) MUST refer to the SAME single work. Do not reveal titles or artist names inside the hints.
     
     FORMAT EXACTLY:
-    Beat: [Describe the musical essence of the track that makes it unique to is {genre} and {decade}. For vocal tracks, briefly summarize the lyrical theme or story concept. Provide a unique fact about the song. Included 5 to 10 words of a song if it has words.
-    For instrumental tracks (like Jazz or Classical), DO NOT invent a lyrical story; instead, describe the specific instrumentation, tempo, rhythmic energy, and distinctive musical style (e.g., syncopated percussion, soaring saxophones, modal chord changes) that defines the track.]
+    Beat: [Describe the musical essence of the track that makes it unique to is {genre} and {decade}. For vocal tracks, briefly summarize the lyrical theme or story concept. Provide a unique fact about the song. Included 5 to 10 words of a song if it has words. For instrumental tracks (like Jazz or Classical), DO NOT invent a lyrical story; instead, describe the specific instrumentation, tempo, rhythmic energy, and distinctive musical style (e.g., syncopated percussion, soaring saxophones, modal chord changes) that defines the track.]
     Lowdown: [Provide a detailed, 2-to-3 sentence insider fact or historical context about the song. Include things like its charting history, unique studio production lore, sample origins, or cultural impact to give a meaty second hint.]
     Lyric: [Iconic line or melody description]
     Song: [Title]
@@ -1552,6 +1545,7 @@ def generate_music_challenge(genre, decade="Random", temp=0.7, history_list=None
         
 @app.route('/get_audio_clue/<song_name>/<artist_name>')
 def get_audio_clue(song_name, artist_name):
+    # Kept for backward compatibility if template endpoints depend on it
     search_url = "https://itunes.apple.com/search"
     query = f"{song_name} {artist_name}"
     params = {"term": query, "limit": 1, "media": "music"}
@@ -1566,9 +1560,12 @@ def get_audio_clue(song_name, artist_name):
     
 @app.route('/music_recall')
 def music_recall():
+    # Clear out any old song data from the session so we start fresh
     session.pop('current_song', None)
+    
+    # Just render the page. DO NOT call your LLM or song generation function here!
     return render_template('music_recall.html')
-
+    
 # --- ---------------------------------------------------------------
 # --- BEGIN SPORTS GAME SECTION ---
 # --- ---------------------------------------------------------------
