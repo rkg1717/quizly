@@ -1,9 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Music Recall{% endblock %}
+{% block title %}Weather Forecast Desk{% endblock %}
 
 {% block content %}
-#<!DOCTYPE html>
+<!-- LOCAL STYLE OVERRIDES FOR WEATHER GAME CONTRAST -->
+<style>
+    /* 1. Darken the unselected verification panel radio button circles */
+    .form-check-input[type="radio"] {
+        border: 2px solid #212529 !important; /* Rich dark charcoal line */
+        background-color: #ffffff !important;
+        cursor: pointer;
+        transition: border-color 0.15s ease-in-out;
+    }
+
+    /* 2. Enhance selected inner-dot focus and solid operational blue fill */
+    .form-check-input[type="radio"]:checked {
+        background-color: #0d6efd !important; 
+        border-color: #0a58ca !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    /* 3. Style the non-linear slider track thumb to look sharp */
+    input[type="range"] {
+        cursor: pointer;
+    }
+</style>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,6 +40,7 @@
 <div class="container py-4">
 
     {% if setup_mode %}
+    <!-- Initialization Mode (Remains consistent) -->
     <div class="row justify-content-center py-5">
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm border-secondary">
@@ -46,12 +70,14 @@
                                 <option value="June" selected>June (Peak Summer Solstice)</option>
                                 <option value="August">August (Late Summer Diurnal)</option>
                                 <option value="October">October (Secondary Transitional Autumn)</option>
+                                <option value="December">December (Early Winter / Deep Synoptic Lows)</option>
+                                <option value="February">February (Late Winter / Sub-Zero Arctic Outbreaks)</option>
                             </select>
                         </div>
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary flex-grow-1 fw-bold py-2">
-                                INITIALIZE STATION RADAR
+                                OBSERVE CURRENT ATMOSPHERIC CONDITIONS
                             </button>
                             <a href="/" class="btn btn-outline-secondary py-2">Cancel</a>
                         </div>
@@ -62,28 +88,30 @@
     </div>
 
     {% else %}
+    <!-- Active Forecasting Dashboard Desk -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
         <div>
-            <h1 class="h3 mb-0">Severe Weather Forecast Desk</h1>
+            <h1 class="h3 mb-0">Diverse Weather Forecast Desk</h1>
             <small class="text-muted">{{ scenario.location }} — {{ scenario.time_of_day }}</small>
         </div>
         <div>
             <span class="me-2 fw-bold">Current Mode:</span>
             {% if mode == 'novice' %}
                 <span class="badge bg-success p-2">Novice Weather Guesser</span>
-                <a href="?mode=experienced&region={{ scenario.location }}&month={{ scenario.time_of_day.split('— ')[1] if '— ' in scenario.time_of_day else scenario.time_of_day }}" class="btn btn-sm btn-outline-secondary ms-2">Switch to Professional</a>
+                <a href="?mode=experienced&region={{ scenario.location }}&month=Winter" class="btn btn-sm btn-outline-secondary ms-2">Switch to Professional</a>
             {% else %}
                 <span class="badge bg-danger p-2">Experienced Forecaster</span>
-                <a href="?mode=novice&region={{ scenario.location }}&month={{ scenario.time_of_day.split('— ')[1] if '— ' in scenario.time_of_day else scenario.time_of_day }}" class="btn btn-sm btn-outline-secondary ms-2">Switch to Novice</a>
+                <a href="?mode=novice&region={{ scenario.location }}&month=Winter" class="btn btn-sm btn-outline-secondary ms-2">Switch to Novice</a>
             {% endif %}
         </div>
     </div>
 
     <div class="row g-4">
+        <!-- Observations Column -->
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-dark text-white fw-bold">
-                    📡 Current Meteorological Soundings & Observations
+                    📡 Current Weather Observations & Soundings
                 </div>
                 <div class="card-body">
                     {% if mode == 'novice' %}
@@ -94,100 +122,132 @@
                         <p>{{ scenario.modes.novice.instruments | safe }}</p>
                         
                         <h5 class="text-primary">Local Environment & Sensory Signs</h5>
-                        <p>{{ scenario.modes.novice.environment }}</p>
+                        <p>{{ scenario.modes.novice.environment | safe }}</p>
                     {% else %}
-                        <h5 class="text-danger">Thermodynamic Profile</h5>
-                        <p>
-                            Atmospheric profiling shows a raw 
-                            <span class="glossary-term text-info" data-term="CAPE">CAPE</span> of 3,400 J/kg 
-                            with an LI of -7. The afternoon 
-                            <span class="glossary-term text-info" data-term="CIN">CIN</span> layer is down to -20 J/kg.
-                        </p>
+                        <h5 class="text-danger">Thermodynamic Analysis</h5>
+                        <p>{{ scenario.modes.experienced.discussion | safe }}</p>
                         
-                        <h5 class="text-danger">Kinematics & Shear Vectors</h5>
-                        <p>
-                            0-6 km Bulk Shear is measured at 55 knots. Low-level 
-                            <span class="glossary-term text-info" data-term="Helicity">Helicity</span> (SRH) 
-                            is pooling at 320 m²/s² along the boundary.
-                        </p>
+                        <h5 class="text-danger">Kinematics & Synoptic Forcing</h5>
+                        <p>{{ scenario.modes.experienced.dynamics | safe }}</p>
                         
-                        <h5 class="text-danger">Synoptic Forcing & Surface Observations</h5>
-                        <p>{{ scenario.modes.experienced.dynamics }}</p>
-                        <p>{{ scenario.modes.experienced.surface_obs }}</p>
+                        <h5 class="text-danger">Surface Boundary Observations</h5>
+                        <p>{{ scenario.modes.experienced.surface_obs | safe }}</p>
                     {% endif %}
                 </div>
             </div>
         </div>
 
+        <!-- Submission Controls Column -->
         <div class="col-md-6">
-            <form action="/verify_forecast" method="POST" class="dashboard-panel shadow-sm">
-                <h4 class="mb-3 text-dark border-bottom pb-2">🎛️ Warning Issuance Panel</h4>
+            <form action="/verify_forecast" method="POST" class="dashboard-panel shadow-sm p-3 border rounded bg-white">
+                <h4 class="mb-3 text-dark border-bottom pb-2">🎛️ Dynamic Forecasting & Verification Panel</h4>
                 
+                <!-- 1. Alert Type Options Expanded -->
                 <div class="mb-4">
-                    <label class="form-label d-block fw-bold">Select Alert Level:</label>
+                    <label class="form-label d-block fw-bold">Identify Future Synoptic/Meso State:</label>
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="alert_type" id="alert1" value="none" checked>
                         <label class="form-check-label" for="alert1">
-                            <strong>No Warning Required</strong> <span class="text-muted">(Routine Rain / Sub-Severe Thunderstorms)</span>
+                            <strong>Routine / No Major Impact Expected</strong> <span class="text-muted">(General rain, clear skies, normal variations)</span>
                         </label>
                     </div>
                     <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert3" value="severe_warning">
+                        <input class="form-check-input" type="radio" name="alert_type" id="alert2" value="high_pressure_clear">
+                        <label class="form-check-label" for="alert2">
+                            <span class="text-success">☀️</span> <strong>Building High Pressure / Strong Clearing</strong> <span class="text-muted">(Synoptic ridge entry)</span>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="alert_type" id="alert3" value="dense_fog_advisory">
                         <label class="form-check-label" for="alert3">
-                            <span class="text-warning">⚠️</span> <strong>Severe Thunderstorm Warning</strong> <span class="text-muted">(Damaging Winds / Large Hail)</span>
+                            <span class="text-info">🌫️</span> <strong>Dense Fog Advisory</strong> <span class="text-muted">(Radiation/Advection cooling profiles)</span>
                         </label>
                     </div>
                     <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert5" value="tornado_warning">
+                        <input class="form-check-input" type="radio" name="alert_type" id="alert4" value="wind_advisory">
+                        <label class="form-check-label" for="alert4">
+                            <span class="text-secondary">💨</span> <strong>Wind Advisory / Gradient Shift</strong> <span class="text-muted">(Tightening pressure gradient fields)</span>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="alert_type" id="alert5" value="severe_warning">
                         <label class="form-check-label" for="alert5">
-                            <span class="text-danger">🌪️</span> <strong>Tornado Warning</strong> <span class="text-muted">(Imminent Rotation / Core Threat)</span>
+                            <span class="text-warning">⚠️</span> <strong>Severe Thunderstorm Warning</strong> <span class="text-muted">(Convective downburst structural hazards)</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="mb-4 p-3 border rounded bg-white">
-                    <label for="leadTime" class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
-                        <span>⏱️ Target Public Lead Time:</span>
-                        <span class="badge bg-primary fs-6" id="leadTimeDisplay">0 Minutes</span>
-                    </label>
-                    <div class="py-2">
-                        <input type="range" class="custom-slider" min="0" max="60" step="5" id="leadTime" name="lead_time" value="0">
-                    </div>
-                    <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.85rem;">
-                        <span>Immediate (0 min)</span>
-                        <span>Standard Notice</span>
-                        <span>Max Notice (60 min)</span>
-                    </div>
-                </div>
+<!-- 2. Non-Linear Timeline Slider -->
+<div class="mb-4 p-3 border rounded bg-light">
+    <label for="leadTime" class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
+        <span>⏱️ Target Event Horizon Window:</span>
+        <!-- Default text matches our starting index (0) -->
+        <span class="badge bg-primary fs-6" id="leadTimeDisplay">0 min</span>
+    </label>
+    <div class="py-2">
+        <input type="range" class="w-100" min="0" max="12" step="1" id="leadTime" value="0">
+    </div>
+    <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.85rem;">
+        <span>Immediate</span>
+        <span>Tactical (Mins)</span>
+        <span>Synoptic (Hours)</span>
+    </div>
+    <input type="hidden" id="leadTimeRaw" name="lead_time" value="0">
+</div>
 
+<script>
+(function() {
+    // Encapsulated to prevent any global variable redeclaration collisions
+    const labels = ["0 min", "10 min", "20 min", "30 min", "40 min", "50 min", "60 min", "2 hrs", "4 hrs", "6 hrs", "8 hrs", "10 hrs", "12 hrs"];
+    const values = [0, 10, 20, 30, 40, 50, 60, 2, 4, 6, 8, 10, 12];
+
+    const slider = document.getElementById("leadTime");
+    const display = document.getElementById("leadTimeDisplay");
+    const hiddenInput = document.getElementById("leadTimeRaw");
+
+    if (slider && display && hiddenInput) {
+        slider.addEventListener("input", function () {
+            let index = parseInt(this.value);
+            display.innerText = labels[index];
+            hiddenInput.value = values[index];
+        });
+    }
+})();
+</script>
+
+                <!-- 3. Dynamic Hazard / Moisture Options Split -->
                 <div class="row g-3 mb-4">
                     <div class="col-sm-6">
-                        <label class="form-label fw-bold small">Max Predicted Hail:</label>
-                        <select class="form-select form-select-sm" name="hail_size">
-                            <option value="none">No Hail</option>
-                            <option value="quarter">Quarter (1.00")</option>
-                            <option value="golf_ball">Golf Ball (1.75")</option>
-                            <option value="baseball">Baseball (2.75")</option>
-                        </select>
-                    </div>
+						<label class="form-label fw-bold small">Moisture Profile / Resulting Core Accumulation:</label>
+						<select class="form-select form-select-sm" name="hail_size">
+							<option value="none">No Precipitation / Sky Clearing</option>
+							<option value="dense_fog">Dense Radiation Fog / Near-Zero Visibility</option>
+							<option value="0.25_rain">Light Stratiform Rain (< 0.25")</option>
+							<option value="1.0_rain">Heavy Liquid Accumulation (1.0"+ Rain)</option>
+							<option value="3.0_snow">Minor Winter Accumulation (1-3" Snow)</option>
+							<option value="6.0_snow">Major Winter Storm Boundary (6.0"+ Snow)</option>
+							<option value="quarter">Severe Convective Hail - Quarter (1.00")</option>
+							<option value="golf_ball">Severe Convective Hail - Golf Ball (1.75"+)</option>
+						</select>
+					</div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-bold small">Max Wind Gusts:</label>
+                        <label class="form-label fw-bold small">Wind Profile / Gradient Vector:</label>
                         <select class="form-select form-select-sm" name="wind_speed">
-                            <option value="none">Sub-Severe (&lt;50 mph)</option>
-                            <option value="60mph">60 mph Gusts</option>
-                            <option value="70mph">70 mph Gusts</option>
-                            <option value="80mph">80+ mph (Destructive)</option>
+                            <option value="none">Light/Calm (Sub-Severe)</option>
+                            <option value="southwesterly_breeze">Southwesterly Winds (Tight Gradient)</option>
+                            <option value="northwesterly_gales">Northwesterly Gales (Advective Cold Front)</option>
+                            <option value="60mph">60 mph Severe Convective Gusts</option>
+                            <option value="70mph">70+ mph Destructive Downbursts</option>
                         </select>
                     </div>
                 </div>
 
+                <!-- Form Controls Execution -->
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-bold">
-                        TRANSMIT ADVISORY TO PUBLIC
+                        TRANSMIT FORECAST
                     </button>
-                    <a href="/" class="btn btn-danger py-2 px-4 fw-bold">
-                       Quit
-                    </a>
+                    <a href="/" class="btn btn-danger py-2 px-4 fw-bold">Quit</a>
                 </div>
             </form>
         </div>
@@ -212,20 +272,11 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Lead Time Slider Script -->
-<script>
-document.getElementById("leadTime").addEventListener("input", function () {
-    document.getElementById("leadTimeDisplay").innerText = this.value + " Minutes";
-});
-</script>
-
 <!-- Unified Glossary Script -->
 <script>
 fetch("/static/wx-glossary.json")
   .then(response => response.json())
   .then(glossary => {
-
-      // Tooltip setup
       document.querySelectorAll('.glossary-term').forEach(term => {
           const key = term.dataset.term;
           term.setAttribute("data-bs-toggle", "tooltip");
@@ -235,19 +286,14 @@ fetch("/static/wx-glossary.json")
       const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
       [...tooltipTriggerList].forEach(el => new bootstrap.Tooltip(el));
 
-      // Click-to-open modal
       document.querySelectorAll('.glossary-term').forEach(item => {
           item.addEventListener('click', function(e) {
               e.preventDefault();
-
               const rawTerm = this.getAttribute('data-term');
               if (!rawTerm) return;
 
               const termKey = rawTerm.trim();
-              const lookupValue =
-                    glossary[termKey] ||
-                    glossary[termKey.toLowerCase()] ||
-                    "Definition not found";
+              const lookupValue = glossary[termKey] || glossary[termKey.toLowerCase()] || "Definition not found";
 
               document.getElementById('glossaryTitle').innerText = termKey;
               document.getElementById('glossaryBody').innerHTML = lookupValue;
@@ -256,10 +302,9 @@ fetch("/static/wx-glossary.json")
               modal.show();
           });
       });
-
   });
 </script>
 
 </body>
-#</html>
+</html>
 {% endblock %}
