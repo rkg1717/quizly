@@ -109,7 +109,7 @@
     </div>
 
   {% else %}
-    <div class="container mx-auto" style="max-width: 800px; padding-top: 20px;">
+    <div class="container mx-auto" style="max-width: 900px; padding-top: 20px;">
       
       <div class="card shadow-sm mb-4 border-0">
           <div class="card-body text-center p-4 bg-dark text-white rounded">
@@ -139,38 +139,73 @@
               <h6 class="fw-bold text-dark mb-3">Optimal Target Settings:</h6>
               <div class="row g-2 text-start">
                   <div class="col-sm-6 mb-1"><strong>Required Alert Level:</strong> <span class="badge bg-secondary p-2">{{ targets.alert }}</span></div>
-                  <div class="col-sm-6 mb-1"><strong>Ideal Notice Margin:</strong> <span class="badge bg-secondary p-2">{{ targets.lead_time }}</span></div>
+                  <div class="col-sm-6 mb-1"><strong>Ideal Onset Margin:</strong> <span class="badge bg-secondary p-2">{{ targets.lead_time }}</span></div>
                   <div class="col-sm-6 mb-1"><strong>Target Hail Limit:</strong> <span class="badge bg-secondary p-2">{{ targets.hail }}</span></div>
                   <div class="col-sm-6 mb-1"><strong>Peak Sustained Winds:</strong> <span class="badge bg-secondary p-2">{{ targets.wind }}</span></div>
               </div>
           </div>
       </div>
 
+      <!-- MAIN PERFORMANCE ANALYSIS SECTION WITH MAP GRID -->
       <div class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-secondary text-white fw-bold">📊 Metric Variance Performance</div>
-          <ul class="list-group list-group-flush border">
-              <li class="list-group-item d-flex justify-content-between align-items-start p-3">
-                  <div class="me-auto">
-                      <div class="fw-bold">Alert Selection Evaluation</div>
-                      <small class="text-muted d-block mt-1">{{ results.alert.feedback }}</small>
+          <div class="card-header bg-secondary text-white fw-bold">📊 Forecast vs Actual Weather Event</div>
+          <div class="card-body p-0 bg-white border">
+              <div class="row g-0">
+                  <!-- Left Side: Performance Metrics Breakdown -->
+                  <div class="col-md-7 border-end">
+                      <ul class="list-group list-group-flush">
+                          <li class="list-group-item d-flex justify-content-between align-items-start p-3 border-0 border-bottom">
+                              <div class="me-auto">
+                                  <div class="fw-bold">Alert Selection Evaluation</div>
+                                  <small class="text-muted d-block mt-1">{{ results.alert.feedback }}</small>
+                              </div>
+                              <span class="badge bg-dark rounded-pill">{{ results.alert.score }} / 40</span>
+                          </li>
+                          <li class="list-group-item d-flex justify-content-between align-items-start p-3 border-0 border-bottom">
+                              <div class="me-auto">
+                                  <div class="fw-bold">Event Onset Timing</div>
+                                  <small class="text-muted d-block mt-1">{{ results.lead_time.feedback }}</small>
+                              </div>
+                              <span class="badge bg-dark rounded-pill">{{ results.lead_time.score }} / 30</span>
+                          </li>
+                          <li class="list-group-item d-flex justify-content-between align-items-start p-3 border-0">
+                              <div class="me-auto">
+                                  <div class="fw-bold">Core Hazard Classification</div>
+                                  <small class="text-muted d-block mt-1">{{ results.magnitude.feedback }}</small>
+                              </div>
+                              <span class="badge bg-dark rounded-pill">{{ results.magnitude.score }} / 30</span>
+                          </li>
+                      </ul>
                   </div>
-                  <span class="badge bg-dark rounded-pill">{{ results.alert.score }} / 40</span>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-start p-3">
-                  <div class="me-auto">
-                      <div class="fw-bold">Warning Issuance Timing</div>
-                      <small class="text-muted d-block mt-1">{{ results.lead_time.feedback }}</small>
+				<!-- Right Side: Historical Synoptic Archive Conditions Chart -->
+                  <div class="col-md-5 d-flex flex-column bg-light p-3 justify-content-center align-items-center">
+                      <div class="w-100 text-center mb-2">
+                          <span class="badge bg-dark w-100 py-2" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                              HISTORICAL INITIALIZATION MAP
+                          </span>
+                      </div>
+                      <div class="border rounded bg-white p-1 shadow-sm position-relative overflow-hidden w-100 d-flex justify-content-center align-items-center" style="height: 220px;">
+                          <!-- Renders the True Historical Chart matching the data frame timestamp -->
+                          <img src="{{ scenario.historical_map_url }}" 
+                               alt="Historical Surface Analysis Chart" 
+                               class="img-fluid" 
+                               onerror="this.onerror=null; this.src='https://www.wpc.ncep.noaa.gov/sfc/usfntsfc.gif'; document.getElementById('map-fallback-alert').style.display='block';"
+                               style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                      </div>
+                      <div id="map-fallback-alert" class="w-100 text-center mt-1" style="display: none;">
+                          <small class="text-danger fw-bold" style="font-size: 0.7rem;">⚠️ Chart archived in full database format below.</small>
+                      </div>
+                      <div class="w-100 text-center mt-2">
+                          <a href="https://www.wpc.ncep.noaa.gov/archives/web_pages/sfc/sfc_archive_maps.php" 
+                             target="_blank" 
+                             class="btn btn-sm btn-outline-secondary w-100 fw-bold" 
+                             style="font-size: 0.75rem;">
+                             🔍 Open NOAA WPC Map Archive Browser
+                          </a>
+                      </div>
                   </div>
-                  <span class="badge bg-dark rounded-pill">{{ results.lead_time.score }} / 30</span>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-start p-3">
-                  <div class="me-auto">
-                      <div class="fw-bold">Core Hazard Classification</div>
-                      <small class="text-muted d-block mt-1">{{ results.magnitude.feedback }}</small>
-                  </div>
-                  <span class="badge bg-dark rounded-pill">{{ results.magnitude.score }} / 30</span>
-              </li>
-          </ul>
+              </div>
+          </div>
       </div>
 
       <div class="d-flex justify-content-between pt-3 mt-4">

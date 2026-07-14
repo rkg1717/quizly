@@ -1779,43 +1779,44 @@ def calculate_weather_score(user_guess, targets):
     total_score += alert_score
     breakdown['alert'] = {'score': alert_score, 'feedback': alert_feedback}
 
-    # ---- 2. TIMELINE SLIDER SCORING (Max 30 points) ----
-    user_lead = int(user_guess.get('lead_time', 0) or 0)
-    ideal_lead = targets.get('ideal_lead_time', 0)
+# ---- 2. TIMELINE SLIDER SCORING (Max 30 points) ----
+    user_start_time = int(user_guess.get('lead_time', 0) or 0)
+    ideal_start_time = targets.get('ideal_lead_time', 0)
     
-    # BULLETPROOF RESOLUTION UNIT CHECK: Values <= 12 denote Hours. Larger integers denote Minutes.
-    is_hourly_event = int(ideal_lead) <= 12
+    # Check if the timeline is measured in Hours or Minutes
+    is_hourly_event = int(ideal_start_time) <= 12
 
     if true_alert == "none":
-        if user_lead == 0:
+        if user_start_time == 0:
             lead_score = 30
-            lead_feedback = "Correct. No advanced transition buffer was required."
+            lead_feedback = "Correct. No weather event onset is expected."
         else:
-            lead_score = max(0, 30 - (user_lead * 2))
-            lead_feedback = "Unnecessary buffer. You dialed in a window for a routine environment."
+            lead_score = max(0, 30 - (user_start_time * 2))
+            lead_feedback = "Incorrect. You forecasted an event starting when conditions are routine."
     else:
-        variance = abs(user_lead - ideal_lead)
+        # Variance now measures how far off your predicted start time is from the actual onset
+        variance = abs(user_start_time - ideal_start_time)
         
         if variance == 0:
             lead_score = 30
             unit = "Hours" if is_hourly_event else "Minutes"
-            lead_feedback = f"Spot on! {user_lead} {unit} perfectly matches the structural onset timeline."
+            lead_feedback = f"Spot on! The event is forecast to start exactly {user_start_time} {unit} from now."
         elif is_hourly_event:
             # Hourly scaling: Deduct 5 points per hour off-target
             lead_score = max(0, 30 - (variance * 5))
-            lead_feedback = f"Target window missed by {variance} hours. True onset timeline: {ideal_lead} Hours."
+            lead_feedback = f"Onset prediction missed by {variance} hours. Actual event start: T+ {ideal_start_time} Hours."
         else:
             # Minute scaling: Acceptable within 10 mins
             if variance <= 10:
                 lead_score = 20
-                lead_feedback = f"Adequate notice ({user_lead} mins). The public has tactical time to react."
+                lead_feedback = f"Close prediction. The event starts in {ideal_start_time} minutes (your variance: {variance} mins)."
             else:
                 lead_score = 5
-                lead_feedback = f"Timeline mismatch. Your notice window missed the convective core by {variance} minutes."
+                lead_feedback = f"Timeline mismatch. Your forecast missed the actual storm onset by {variance} minutes."
             
     total_score += lead_score
     breakdown['lead_time'] = {'score': lead_score, 'feedback': lead_feedback}
-
+    
     # ---- 3. HAZARD MAGNITUDE SCORING (Max 30 points) ----
     user_hail = user_guess.get('hail_size')
     true_hail = targets.get('hail_magnitude')
@@ -1845,17 +1846,15 @@ def calculate_weather_score(user_guess, targets):
     breakdown['total'] = total_score
     return breakdown
 
-
-# --- AI WEATHER SCENARIO GENERATOR ENGINE ---
+# --- UPDATED AI WEATHER SCENARIO GENERATOR ENGINE ---
 def generate_ai_weather_scenario(region, month, risk_level, temp=0.7):
-    api_key = get_openai_api_key() 
-    
-    # Define fallback_scenario inside the function scope to prevent NameErrors
+    # --- FALLBACK SCENARIO DEFINITION ---
     fallback_scenario = {
         "title": "Synoptic Ridge Transition",
-        "briefing": f"An upper-level ridge is expanding across the {region} area, introducing distinct shifts in cloud types and thermal boundaries over a 12-hour evolutionary timeline.",
+        "briefing": f"An upper-level ridge is expanding across the {region} area, introducing distinct shifts over a 12-hour evolutionary timeline.",
         "location": f"{region}",
-        "time_of_day": f"Evolution Sequence — {month}",
+        "time_of_day": f"Initialization Frame: 20190520 @ 12Z",
+        "historical_map_url": "https://www.wpc.ncep.noaa.gov/archives/sfc/2019/usfntsfc2019052012.gif",
         "modes": {
             "novice": {
                 "sky_look": "Thin, wispy cirrus clouds slowly stretch across the western horizon.",
@@ -1863,9 +1862,9 @@ def generate_ai_weather_scenario(region, month, risk_level, temp=0.7):
                 "environment": "Air feels notably dryer and crisper as a light breeze sets in."
             },
             "experienced": {
-                "discussion": "Vorticity charts show a progressive upper air trough lifting northeast, replaced by building low-level high pressure.",
-                "dynamics": "The local moisture profile reveals dew points dropping initially, followed by rapid radiation cooling trends.",
-                "surface_obs": "Surface winds are shifting from southerly to crisp northwesterlies with stable thermal parameters."
+                "discussion": "Vorticity charts show a progressive upper air trough lifting northeast.",
+                "dynamics": "The local moisture profile reveals dew points dropping initially.",
+                "surface_obs": "Surface winds are shifting from southerly to crisp northwesterlies."
             }
         },
         "scoring_targets": {
@@ -1876,36 +1875,30 @@ def generate_ai_weather_scenario(region, month, risk_level, temp=0.7):
         }
     }
 
+    api_key = get_openai_api_key() 
     if not api_key:
         return fallback_scenario
         
     client = OpenAI(api_key=api_key)
 
-    # DYNAMIC TRACKING: Force the AI into a specific track so it doesn't mix units!
-    scenario_type = "convective" if "risk" in risk_level.lower() or "slight" in risk_level.lower() else "synoptic"
-
     prompt = f"""
 You are an expert lead meteorologist designing an educational forecasting simulator.
-Generate ONE complete weather event timeline. 
+Generate ONE real historical weather event timeline that matches these parameters:
 
 REGION: {region}
 MONTH: {month}
-SCENARIO TYPE FOCUS: {scenario_type.upper()}
+RISK LEVEL: {risk_level}
 
-CRITICAL DESIGN RULES BASED ON TYPE:
-=== IF SCENARIO TYPE IS CONVECTIVE ===
-- Focus on immediate convective threats (Severe Thunderstorms, Tornadoes).
-- CorrectAlert MUST be: severe_warning or tornado_warning
-- IdealLeadTime MUST be chosen exactly from these integer minute values: 10, 20, 30, 40, 50, 60
-
-=== IF SCENARIO TYPE IS SYNOPTIC ===
-- Focus on long-range evolutions (Approaching troughs, shifting high pressure, radiation cooling, forming fog).
-- CorrectAlert MUST be: high_pressure_clear, dense_fog_advisory, or wind_advisory
-- IdealLeadTime MUST be chosen exactly from these integer hour values: 2, 4, 6, 8, 10, 12
+CRITICAL RULES:
+1. Ground the scenario in a REAL, historical high-impact weather event matching this month/region.
+2. Provide an exact 8-digit date string (e.g., 20110427 for the April 2011 outbreak, or 20211210).
+3. Provide the ideal tracking initialization hour cycle (00, 06, 12, or 18) representing conditions 6 to 24 hours PRIOR to the event onset.
 
 OUTPUT FORMAT (strictly follow this exact structure):
-Title: [Short name]
-Briefing: [Scientific breakdown tracking the evolution]
+Title: [Event Name, e.g., Super Outbreak Reflection]
+HistoricalDate: [8-digit number string only, e.g., 20110427]
+SynopticHourCycle: [Two-digit UTC string only, choose from: 00, 06, 12, 18]
+Briefing: [Scientific breakdown tracking the actual verified outcome]
 NoviceSkyLook: [Visual clues]
 NoviceInstruments: [Instrument tendencies]
 NoviceEnvironment: [Sensory clues]
@@ -1913,10 +1906,10 @@ ExpDiscussion: [Technical mesoscale analysis]
 ExpDynamics: [Kinematic profiles]
 ExpSurfaceObs: [Surface parameters]
 
-CorrectAlert: [Based on rules above]
-IdealLeadTime: [Integer number only matching the units rule above]
-HailMagnitude: [Based on rules above]
-WindMagnitude: [Based on rules above]
+CorrectAlert: [severe_warning, tornado_warning, high_pressure_clear, dense_fog_advisory, wind_advisory]
+IdealLeadTime: [Integer offset representing the forecast event onset time from data initialization]
+HailMagnitude: [Estimated size]
+WindMagnitude: [Estimated peak wind]
 """
 
     try:
@@ -1935,8 +1928,16 @@ WindMagnitude: [Based on rules above]
                 key, val = line.split(":", 1)
                 data[key.strip().lower()] = val.strip().replace('"', '')
 
-        ai_briefing = data.get("briefing", fallback_scenario["briefing"])
+        historical_date = data.get("historicaldate", "20190520")
+        hour_cycle = data.get("synoptichourcycle", "12")
 
+        # Strip any accidental non-numeric characters from the generated date string safely
+        clean_date = "".join(filter(str.isdigit, historical_date)) or "20190520"
+        clean_year = clean_date[:4]
+
+        historical_map_url = f"https://www.wpc.ncep.noaa.gov/archives/sfc/{clean_year}/usfntsfc{clean_date}{hour_cycle}.gif"
+
+        # Safe extraction of modes with fallbacks
         novice_sky = data.get("noviceskylook", fallback_scenario["modes"]["novice"]["sky_look"])
         novice_instr = data.get("noviceinstruments", fallback_scenario["modes"]["novice"]["instruments"])
         novice_env = data.get("noviceenvironment", fallback_scenario["modes"]["novice"]["environment"])
@@ -1946,10 +1947,11 @@ WindMagnitude: [Based on rules above]
         exp_surface = data.get("expsurfaceobs", fallback_scenario["modes"]["experienced"]["surface_obs"])
 
         scenario = {
-            "title": data.get("title", "Synoptic Meso Evolution"),
-            "briefing": ai_briefing,
+            "title": data.get("title", "Historical Meso Evolution"),
+            "briefing": data.get("briefing", fallback_scenario["briefing"]),
             "location": f"{region}",
-            "time_of_day": f"Evolution Sequence — {month}",
+            "time_of_day": f"Initialization Frame: {clean_date} @ {hour_cycle}Z",
+            "historical_map_url": historical_map_url,
             "modes": {
                 "novice": {
                     "sky_look": novice_sky,
@@ -1975,6 +1977,7 @@ WindMagnitude: [Based on rules above]
     except Exception as e:
         print(f"Weather Engine Connection Glitch: {e}")
         return fallback_scenario
+
 
 # --- HELPER UTILITY: AUTOMATIC GLOSSARY LINKER ---
 def link_meteorological_terms(text):
@@ -2032,6 +2035,7 @@ def weather_game():
     session['current_weather_briefing'] = current_scenario['briefing']
     session['current_weather_location'] = current_scenario['location']
     session['current_weather_time'] = current_scenario['time_of_day']
+    session['current_weather_map'] = current_scenario.get('historical_map_url', '')
     session.modified = True
 
     display_scenario = copy.deepcopy(current_scenario)
@@ -2062,7 +2066,8 @@ def verify_forecast():
         "title": session.get('current_weather_title', 'Dynamic Scenario'),
         "briefing": session.get('current_weather_briefing', ''),
         "location": session.get('current_weather_location', 'Local'),
-        "time_of_day": session.get('current_weather_time', 'N/A')
+        "time_of_day": session.get('current_weather_time', 'N/A'),
+        "historical_map_url": session.get('current_weather_map', '')
     }
     
     results = calculate_weather_score(user_guess, scoring_targets)
@@ -2086,7 +2091,7 @@ def verify_forecast():
         scenario_id=999,
         scores={}
     )
-    
+   
 # --- ---------------------------------------------------------------
 # --- END WEATHER FORECAST GAME SECTION ---
 # --- ---------------------------------------------------------------
