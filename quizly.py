@@ -24,7 +24,7 @@ from text_utils import clean_text, fuzzy_match
 
 # 4. Standard Built-in Python Libraries
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 import copy
 import hashlib
@@ -1749,167 +1749,212 @@ def get_sports_turn():
 # --- BEGIN WEATHER FORECAST GAME SECTION ---
 # --- ---------------------------------------------------------------
 
+STATES = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", 
+    "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", 
+    "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", 
+    "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", 
+    "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", 
+    "New Hampshire", "New Jersey", "New Mexico", "New York", 
+    "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", 
+    "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", 
+    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", 
+    "West Virginia", "Wisconsin", "Wyoming"
+]
+
 # --- HELPER: SCORING CALCULATION ENGINE ---
 def calculate_weather_score(user_guess, targets):
-    """
-    Compares the user's dialed-in choices against the scenario's true targets.
-    Dynamically adjusts scoring rules based on whether the target uses an 
-    hourly synoptic timeline or a minute-based severe warning timeline.
-    """
-    breakdown = {}
-    total_score = 0
-    
-    # ---- 1. ALERT TYPE SCORING (Max 40 points) ----
-    user_alert = user_guess.get('alert_type')
-    true_alert = targets.get('correct_alert')
-    
-    if user_alert == true_alert:
-        alert_score = 40
-        alert_feedback = f"Perfect! You correctly identified the target state: {true_alert.replace('_', ' ').title()}."
-    elif user_alert == "none" and true_alert != "none":
-        alert_score = 0
-        alert_feedback = f"Critical Failure. You missed an evolving {true_alert.replace('_', ' ').title()} event."
-    elif true_alert == "none" and user_alert != "none":
-        alert_score = 10
-        alert_feedback = "False Alarm. You issued an advisory, but conditions remained routine."
-    else:
-        alert_score = 20
-        alert_feedback = f"Hazard Mismatch. Expected: {true_alert.replace('_', ' ').title()}."
-        
-    total_score += alert_score
-    breakdown['alert'] = {'score': alert_score, 'feedback': alert_feedback}
-
-# ---- 2. TIMELINE SLIDER SCORING (Max 30 points) ----
-    user_start_time = int(user_guess.get('lead_time', 0) or 0)
-    ideal_start_time = targets.get('ideal_lead_time', 0)
-    
-    # Check if the timeline is measured in Hours or Minutes
-    is_hourly_event = int(ideal_start_time) <= 12
-
-    if true_alert == "none":
-        if user_start_time == 0:
-            lead_score = 30
-            lead_feedback = "Correct. No weather event onset is expected."
-        else:
-            lead_score = max(0, 30 - (user_start_time * 2))
-            lead_feedback = "Incorrect. You forecasted an event starting when conditions are routine."
-    else:
-        # Variance now measures how far off your predicted start time is from the actual onset
-        variance = abs(user_start_time - ideal_start_time)
-        
-        if variance == 0:
-            lead_score = 30
-            unit = "Hours" if is_hourly_event else "Minutes"
-            lead_feedback = f"Spot on! The event is forecast to start exactly {user_start_time} {unit} from now."
-        elif is_hourly_event:
-            # Hourly scaling: Deduct 5 points per hour off-target
-            lead_score = max(0, 30 - (variance * 5))
-            lead_feedback = f"Onset prediction missed by {variance} hours. Actual event start: T+ {ideal_start_time} Hours."
-        else:
-            # Minute scaling: Acceptable within 10 mins
-            if variance <= 10:
-                lead_score = 20
-                lead_feedback = f"Close prediction. The event starts in {ideal_start_time} minutes (your variance: {variance} mins)."
-            else:
-                lead_score = 5
-                lead_feedback = f"Timeline mismatch. Your forecast missed the actual storm onset by {variance} minutes."
-            
-    total_score += lead_score
-    breakdown['lead_time'] = {'score': lead_score, 'feedback': lead_feedback}
-    
-    # ---- 3. HAZARD MAGNITUDE SCORING (Max 30 points) ----
-    user_hail = user_guess.get('hail_size')
-    true_hail = targets.get('hail_magnitude')
-    user_wind = user_guess.get('wind_speed')
-    true_wind = targets.get('wind_magnitude')
-    
-    if user_hail == true_hail:
-        hail_score = 15
-        hail_feedback = "Accurate moisture/secondary feature tracking."
-    else:
-        hail_score = 5 if user_hail != "none" and true_hail != "none" else 0
-        hail_feedback = f"Incorrect classification. Verifying boundary: {str(true_hail).replace('_', ' ')}."
-    
-    if user_wind == true_wind:
-        wind_score = 15
-        wind_feedback = "Accurate vector gradient mapping."
-    else:
-        wind_score = 5 if user_wind != "none" and true_wind != "none" else 0
-        wind_feedback = f"Incorrect threshold. Verification: {str(true_wind).replace('_', ' ')}."
-    
-    total_score += (hail_score + wind_score)
-    breakdown['magnitude'] = {
-        'score': hail_score + wind_score, 
-        'feedback': f"Moisture: {hail_feedback} | Wind/Kinematics: {wind_feedback}"
+    breakdown = {
+        "precip_type_score": 0,
+        "precip_amount_score": 0,
+        "temp_score": 0,          # Changed key to match template expectations
+        "wind_score": 0,
+        "cape_score": 0
     }
+    
+    # 1. Check Precipitation Type (20 pts)
+    if str(user_guess.get('precip_type')).lower().strip() == str(targets.get('correct_precip_type')).lower().strip():
+        breakdown["precip_type_score"] = 20
 
-    breakdown['total'] = total_score
-    return breakdown
+    # 2. Check Precipitation Amount (20 pts)
+    if str(user_guess.get('precip_amount')).lower().strip() == str(targets.get('correct_precip_amount')).lower().strip():
+        breakdown["precip_amount_score"] = 20
 
-# --- UPDATED AI WEATHER SCENARIO GENERATOR ENGINE ---
-def generate_ai_weather_scenario(region, month, risk_level, temp=0.7):
-    # --- FALLBACK SCENARIO DEFINITION ---
-    fallback_scenario = {
-        "title": "Synoptic Ridge Transition",
-        "briefing": f"An upper-level ridge is expanding across the {region} area, introducing distinct shifts over a 12-hour evolutionary timeline.",
-        "location": f"{region}",
-        "time_of_day": f"Initialization Frame: 20190520 @ 12Z",
-        "historical_map_url": "https://www.wpc.ncep.noaa.gov/archives/sfc/2019/usfntsfc2019052012.gif",
-        "modes": {
-            "novice": {
-                "sky_look": "Thin, wispy cirrus clouds slowly stretch across the western horizon.",
-                "instruments": "The barometer has leveled off and is beginning a slow, steady rise.",
-                "environment": "Air feels notably dryer and crisper as a light breeze sets in."
-            },
-            "experienced": {
-                "discussion": "Vorticity charts show a progressive upper air trough lifting northeast.",
-                "dynamics": "The local moisture profile reveals dew points dropping initially.",
-                "surface_obs": "Surface winds are shifting from southerly to crisp northwesterlies."
-            }
-        },
-        "scoring_targets": {
-            "correct_alert": "high_pressure_clear",
-            "ideal_lead_time": 12,
-            "hail_magnitude": "none",
-            "wind_magnitude": "northwesterly_gales"
+    # 3. Check Temperature Profile (20 pts) - FIXED LOOKUP & KEY
+    if str(user_guess.get('temp_range')).lower().strip() == str(targets.get('correct_temperature')).lower().strip():
+        breakdown["temp_score"] = 20
+
+    # 4. Check CAPE / Instability Field (20 pts)
+    if str(user_guess.get('instability_cape')).lower().strip() == str(targets.get('correct_cape')).lower().strip():
+        breakdown["cape_score"] = 20
+
+    # 5. Wind Profile Proximity Check
+    wind_tiers = ['light_less_10', 'moderate_10_25', 'strong_25_40', 'severe_gales_40_64', 'hurricane_force_greater_64']
+    u_wind = str(user_guess.get('wind_profile')).lower().strip()
+    t_wind = str(targets.get('correct_wind_profile')).lower().strip()
+    
+    if u_wind == t_wind:
+        breakdown["wind_score"] = 20
+    elif u_wind in wind_tiers and t_wind in wind_tiers:
+        if abs(wind_tiers.index(u_wind) - wind_tiers.index(t_wind)) == 1:
+            breakdown["wind_score"] = 10 
+
+    total_score = sum(breakdown.values())
+    return {"total": total_score, "breakdown": breakdown}
+
+# --- HELPER: SIMPLIFY PARAMETERS ---
+def format_parameter_display(key, value, precip_type="none"):
+    if not value or value == 'none':
+        return "None"
+        
+    value = str(value).lower()
+    
+    # --- TEMPERATURE BOUNDS ---
+    if key == 'temperature':
+        mapping = {
+            'below_freezing': "Below Freezing (< 32°F)",
+            'cool_32_50': "32°F – 50°F (Cool)",
+            'mild_50_70': "50°F – 70°F (Mild)",
+            'warm_70_85': "70°F – 85°F (Warm)",
+            'hot_85_plus': "> 85°F (Hot)"
         }
-    }
+        return mapping.get(value, value.replace('_', ' ').title())
 
-    api_key = get_openai_api_key() 
+    # --- PRECIPITATION AMOUNT WITH INCHES / SNOW UNITS ---
+    elif key == 'precip_amount':
+        is_snow = str(precip_type).lower() == 'snow'
+        mapping = {
+            'none': '0.00 in',
+            'light_less_025': '1" – 3" Snow' if is_snow else '< 0.25 in',
+            'moderate_025_10': '3" – 8" Snow' if is_snow else '0.25" – 1.00 in',
+            'heavy_10_20': '8" – 18" Heavy Snow' if is_snow else '1.00" – 2.00 in',
+            'extreme_greater_20': '> 18" Blizzard Snow' if is_snow else '> 2.00 in'
+        }
+        return mapping.get(value, value.replace('_', ' ').title())
+
+    # --- WIND KINEMATICS WITH KNOTS ---
+    elif key == 'wind_profile':
+        mapping = {
+            'light_less_10': '< 10 knots (Light)',
+            'moderate_10_25': '10 – 25 knots (Moderate)',
+            'strong_25_40': '25 – 40 knots (Strong)',
+            'severe_gales_40_64': '40 – 64 knots (Severe Gales)',
+            'hurricane_force_greater_64': '> 64 knots (Hurricane Force)'
+        }
+        return mapping.get(value, value.replace('_', ' ').title())
+
+    return value.replace('_', ' ').title()
+    
+# --- WEATHER SCENARIO GENERATOR ENGINE ---
+def generate_ai_weather_scenario(region, month, risk_level, mode='novice', temp=0.7):
+    # --- FALLBACK SCENARIOS FOR OFFLINE / TEST MODES ---
+    if mode == 'experienced':
+        fallback_scenario = {
+            "title": "Synoptic Baroclinic Transition",
+            "location": f"{region}",
+            "month": month,
+            "time_of_day": f"Initialization Frame ($T_{{-24}}$): 20110201 @ 00Z",
+            "historical_map_url": "https://www.wpc.ncep.noaa.gov/archives/sfc/2011/usfntsfc2011020100.gif",
+            "ground_truth_map_url": "https://www.wpc.ncep.noaa.gov/archives/sfc/2011/usfntsfc2011020212.gif",
+            "observable_conditions": {
+                "upper_air": "500 hPa jet streak at 110 kt with dynamic cyclonic vorticity advection (+18x10^-5 s^-1) and strong 850 hPa frontogenesis.",
+                "visual_sky": "Thickening altostratus deck transitioning to nimbostratus with bases lowering rapidly to 1,500 ft AGL.",
+                "backyard_instruments": "Barometric tendency: -2.8 mb/3hr (falling rapidly). Surface Temp: 27.5°F, Dew Point: 25.0°F, 10m Wind: 060° at 22 kt G32kt.",
+                "local_environment": "850-700 hPa layer saturated with steep operational lapse rates (6.8°C/km). Strong low-level warm air advection (WAA)."
+            },
+            "scoring_targets": {
+                "correct_precip_type": "snow",
+                "correct_precip_amount": "heavy_10_20",
+                "correct_temperature": "below_freezing",
+                "correct_wind_profile": "severe_gales_40_64",
+                "correct_cape": "stable",
+                "actual_weather_event": "Blizzard conditions with zero visibility and 14 inches of total snow accumulation."
+            }
+        }
+    else:
+        fallback_scenario = {
+            "title": "Impending Major Winter Storm",
+            "location": f"{region}",
+            "month": month,
+            "time_of_day": f"Initialization Frame ($T_{{-24}}$): 20110201 @ 00Z",
+            "historical_map_url": "https://www.wpc.ncep.noaa.gov/archives/sfc/2011/usfntsfc2011020100.gif",
+            "ground_truth_map_url": "https://www.wpc.ncep.noaa.gov/archives/sfc/2011/usfntsfc2011020212.gif",
+            "observable_conditions": {
+                "upper_air": "A powerful jet stream disturbance overhead is steering a massive cold air mass down into the region.",
+                "visual_sky": "High thin clouds have darkened into a heavy grey cloud blanket, completely hiding the sun.",
+                "backyard_instruments": "The outdoor barometer display is dropping steadily. Thermometer reads 28°F with chilly, gusty winds from the northeast.",
+                "local_environment": "The air feels heavy and icy. Birds have stopped flying and moisture levels are rapidly rising as the storm approaches."
+            },
+            "scoring_targets": {
+                "correct_precip_type": "snow",
+                "correct_precip_amount": "heavy_10_20",
+                "correct_temperature": "below_freezing",
+                "correct_wind_profile": "severe_gales_40_64",
+                "correct_cape": "stable",
+                "actual_weather_event": "Blizzard conditions with zero visibility and 14 inches of total snow accumulation."
+            }
+        }
+
+    api_key = os.environ.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
     if not api_key:
         return fallback_scenario
         
     client = OpenAI(api_key=api_key)
 
+    # 1. Detailed Mode Guidelines
+    if mode == 'experienced':
+        mode_guidelines = """
+DIFFICULTY LEVEL: EXPERIENCED PROFESSIONAL FORECASTER
+- Upper Air Synopsis: Require specific kinematic and thermodynamic variables (e.g., 500 hPa jet streak speed, absolute vorticity advection numbers, 850 hPa frontogenesis, lapse rates in °C/km, WAA/CAA).
+- Visual Sky Assessment: Use precise cloud classification types (e.g., Cirrostratus fibratus, Altostratus opacus, Cumulonimbus congestus) with cloud base estimates (AGL).
+- Backyard Instruments: Include exact instrument readings (e.g., Exact 3-hour pressure tendency in mb/hr, surface temperature, dew point depression, wind direction degrees, knots, and gusts).
+- Local Environment & Sensory: Include thermodynamic instability indicators, layer humidity (e.g., 850-700 hPa saturation), and boundary layer friction dynamics.
+- Tone: Strictly scientific and meteorological. DO NOT explain terms or provide simple hints.
+"""
+    else:
+        mode_guidelines = """
+DIFFICULTY LEVEL: NOVICE WEATHER GUESSER
+- Upper Air Synopsis: Explain the upper atmosphere using clear, accessible concepts (e.g., jet stream shifts, incoming pressure troughs, large cold/warm air masses).
+- Visual Sky Assessment: Focus on vivid visual cues and cloud textures (e.g., sun-blocking grey decks, towering fluffy storm clouds, dark horizon).
+- Backyard Instruments: Provide simple, intuitive gauge readings (e.g., "Barometer dropping steadily", "Thermometer holding at 30°F", "Brisk breeze from the east").
+- Local Environment & Sensory: Focus on accessible sensory signs (e.g., sensory wind chill, moisture in the air, animal behavior, outdoor sounds/smells).
+- Tone: Educational, clear, and descriptive.
+"""
+
     prompt = f"""
-You are an expert lead meteorologist designing an educational forecasting simulator.
+You are an expert lead meteorologist designing an educational NWS Mesoscale Initialization Terminal simulator.
 Generate ONE real historical weather event timeline that matches these parameters:
 
-REGION: {region}
-MONTH: {month}
+TARGET STATE/DOMAIN: {region}
+CLIMATOLOGICAL MONTH: {month}
 RISK LEVEL: {risk_level}
 
-CRITICAL RULES:
-1. Ground the scenario in a REAL, historical high-impact weather event matching this month/region.
-2. Provide an exact 8-digit date string (e.g., 20110427 for the April 2011 outbreak, or 20211210).
-3. Provide the ideal tracking initialization hour cycle (00, 06, 12, or 18) representing conditions 6 to 24 hours PRIOR to the event onset.
+{mode_guidelines}
 
-OUTPUT FORMAT (strictly follow this exact structure):
-Title: [Event Name, e.g., Super Outbreak Reflection]
-HistoricalDate: [8-digit number string only, e.g., 20110427]
-SynopticHourCycle: [Two-digit UTC string only, choose from: 00, 06, 12, 18]
-Briefing: [Scientific breakdown tracking the actual verified outcome]
-NoviceSkyLook: [Visual clues]
-NoviceInstruments: [Instrument tendencies]
-NoviceEnvironment: [Sensory clues]
-ExpDiscussion: [Technical mesoscale analysis]
-ExpDynamics: [Kinematic profiles]
-ExpSurfaceObs: [Surface parameters]
+CRITICAL DATA HORIZON RULES:
+1. Ground the scenario in a REAL, historical high-impact weather event matching this month/state. NOTE: The atmospheric conditions do NOT always need to lead to severe weather—include benign, mild, clear, or light routine weather events when appropriate for the given risk level.
+2. Provide an exact 8-digit date string (YYYYMMDD) for the INITIALIZATION frame.
+3. The main event ground truth MUST occur EXACTLY 24 hours AFTER this initialization frame.
+4. Choose an initialization hour cycle (00, 06, 12, or 18 UTC).
 
-CorrectAlert: [severe_warning, tornado_warning, high_pressure_clear, dense_fog_advisory, wind_advisory]
-IdealLeadTime: [Integer offset representing the forecast event onset time from data initialization]
-HailMagnitude: [Estimated size]
-WindMagnitude: [Estimated peak wind]
+OUTPUT FORMAT RULES:
+Do not use Markdown bolding on keys. Output keys exactly as text.
+
+Title: [Event Name]
+InitializationDate: [8-digit number string only, YYYYMMDD]
+SynopticHourCycle: [Two-digit UTC string only: 00, 06, 12, 18]
+
+UpperAirSynopsis: [Detailed synopsis strictly following difficulty level rules]
+VisualSkyAssessment: [Detailed visual sky assessment strictly following difficulty level rules]
+BackyardInstruments: [Detailed instrument readings strictly following difficulty level rules]
+LocalEnvironmentSensory: [Detailed sensory/environmental cues strictly following difficulty level rules]
+
+ActualWeatherEvent: [Detailed description of the verified weather event that hit exactly 24 hours later]
+CorrectPrecipType: [Must choose EXACTLY one: none, rain, convective_storms, freezing_rain, sleet, snow]
+CorrectPrecipAmount: [Must choose EXACTLY one: none, light_less_025, moderate_025_10, heavy_10_20, extreme_greater_20]
+CorrectTemperature: [Must choose EXACTLY one: below_freezing, cool_32_50, mild_50_70, warm_70_85, hot_85_plus]
+CorrectWindProfile: [Must choose EXACTLY one: light_less_10, moderate_10_25, strong_25_40, severe_gales_40_64, hurricane_force_greater_64]
+CorrectCAPE: [Must choose EXACTLY one: stable, marginal, highly_unstable]
 """
 
     try:
@@ -1921,177 +1966,227 @@ WindMagnitude: [Estimated peak wind]
         text = response.choices[0].message.content.strip()
         
         data = {}
-        lines = text.split('\n')
-        for line in lines:
-            line = line.strip().replace("**", "")
+        for line in text.split('\n'):
+            line = line.strip().replace("**", "").replace("- ", "")
             if ":" in line:
                 key, val = line.split(":", 1)
-                data[key.strip().lower()] = val.strip().replace('"', '')
+                clean_key = key.strip().lower().replace("_", "").replace(" ", "")
+                data[clean_key] = val.strip().replace('"', '')
 
-        historical_date = data.get("historicaldate", "20190520")
-        hour_cycle = data.get("synoptichourcycle", "12")
+        init_date_str = data.get("initializationdate", "20110201")
+        hour_cycle = data.get("synoptichourcycle", "00")
 
-        # Strip any accidental non-numeric characters from the generated date string safely
-        clean_date = "".join(filter(str.isdigit, historical_date)) or "20190520"
-        clean_year = clean_date[:4]
+        clean_init_date = "".join(filter(str.isdigit, init_date_str)) or "20110201"
+        clean_year = clean_init_date[:4]
 
-        historical_map_url = f"https://www.wpc.ncep.noaa.gov/archives/sfc/{clean_year}/usfntsfc{clean_date}{hour_cycle}.gif"
-
-        # Safe extraction of modes with fallbacks
-        novice_sky = data.get("noviceskylook", fallback_scenario["modes"]["novice"]["sky_look"])
-        novice_instr = data.get("noviceinstruments", fallback_scenario["modes"]["novice"]["instruments"])
-        novice_env = data.get("noviceenvironment", fallback_scenario["modes"]["novice"]["environment"])
-
-        exp_disc = data.get("expdiscussion", fallback_scenario["modes"]["experienced"]["discussion"])
-        exp_dyn = data.get("expdynamics", fallback_scenario["modes"]["experienced"]["dynamics"])
-        exp_surface = data.get("expsurfaceobs", fallback_scenario["modes"]["experienced"]["surface_obs"])
+        init_dt = datetime.strptime(f"{clean_init_date}{hour_cycle}", "%Y%m%d%H")
+        event_dt = init_dt + timedelta(hours=24) 
+        event_date_str = event_dt.strftime("%Y%m%d")
+        event_hour_str = event_dt.strftime("%H")
+        ground_truth_map_url = f"https://www.wpc.ncep.noaa.gov/archives/sfc/{event_dt.strftime('%Y')}/usfntsfc{event_date_str}{event_hour_str}.gif"
+        
+        obs_time_caption = init_dt.strftime("%B %d, %Y @ %H:00 UTC")
+        event_time_caption = event_dt.strftime("%B %d, %Y @ %H:00 UTC (Valid +24h)")
+        historical_map_url = f"https://www.wpc.ncep.noaa.gov/archives/sfc/{clean_year}/usfntsfc{clean_init_date}{hour_cycle}.gif"
 
         scenario = {
-            "title": data.get("title", "Historical Meso Evolution"),
-            "briefing": data.get("briefing", fallback_scenario["briefing"]),
+            "title": data.get("title", "Historical Mesoscale Initialization"),
             "location": f"{region}",
-            "time_of_day": f"Initialization Frame: {clean_date} @ {hour_cycle}Z",
+            "month": month,
+            "time_of_day": f"Observation Time: {obs_time_caption}",
+            "event_time": f"Actual Event Ground Truth: {event_time_caption}",
             "historical_map_url": historical_map_url,
-            "modes": {
-                "novice": {
-                    "sky_look": novice_sky,
-                    "instruments": novice_instr,
-                    "environment": novice_env
-                },
-                "experienced": {
-                    "discussion": exp_disc,
-                    "dynamics": exp_dyn,
-                    "surface_obs": exp_surface
-                }
+            "ground_truth_map_url": ground_truth_map_url,
+            "observable_conditions": {
+                "upper_air": data.get("upperairsynopsis", ""),
+                "visual_sky": data.get("visualskyassessment", ""),
+                "backyard_instruments": data.get("backyardinstruments", ""),
+                "local_environment": data.get("localenvironmentsensory", "")
             },
             "scoring_targets": {
-                "correct_alert": data.get("correctalert", "none"),
-                "ideal_lead_time": int(data.get("idealleadtime", "0") if data.get("idealleadtime", "0").isdigit() else 0),
-                "hail_magnitude": data.get("hailmagnitude", "none"),
-                "wind_magnitude": data.get("windmagnitude", "none")
+                "correct_precip_type": data.get("correctpreciptype", "none"),
+                "correct_precip_amount": data.get("correctprecipamount", "none"),
+                "correct_temperature": data.get("correcttemperature", "none"),
+                "correct_wind_profile": data.get("correctwindprofile", "none"),
+                "correct_cape": data.get("correctcape", "stable"),
+                "actual_weather_event": data.get("actualweatherevent", "No event details processed.")
             }
         }
-
         return scenario
 
     except Exception as e:
         print(f"Weather Engine Connection Glitch: {e}")
         return fallback_scenario
-
-
-# --- HELPER UTILITY: AUTOMATIC GLOSSARY LINKER ---
-def link_meteorological_terms(text):
-    """
-    Scans the AI briefing text and wraps key technical terms in 
-    interactive glossary anchor tags for the frontend modal dictionary.
-    """
-    terms_to_link = {
-        "CAPE": "CAPE",
-        "Convective Available Potential Energy": "CAPE",
-        "CIN": "CIN",
-        "Convective Inhibition": "CIN",
-        "Helicity": "Helicity",
-        "SRH": "Helicity",
-        "Storm-Relative Helicity": "Helicity",
-        "dew point": "Dew Point",
-        "dewpoints": "Dew Point",
-        "bulk shear": "Bulk Shear",
-        "wind shear": "Bulk Shear",
-        "dryline": "Dryline",
-        "microburst": "Microburst",
-        "microbursts": "Microburst",
-        "supercell": "Supercell",
-        "supercells": "Supercell"
-    }
-    
-    for term in sorted(terms_to_link.keys(), key=len, reverse=True):
-        pattern = re.compile(r'\b(' + re.escape(term) + r')\b', re.IGNORECASE)
-        replacement = f'<span class="glossary-term text-info" data-term="{terms_to_link[term]}">\\1</span>'
-        text = pattern.sub(replacement, text)
         
+def link_meteorological_terms(text):
+  if not text or not isinstance(text, str):
     return text
 
-# --- THE TWO-STEP WEATHER ROUTE WITH AUTO-LINKING ---
+  # Dictionary mapping terms to brief inline definitions
+  definitions = {
+      r"barometric pressure": (
+          "Atmospheric pressure indicated by a barometer, driving wind and"
+          " weather systems."
+      ),
+      r"relative humidity": (
+          "The amount of water vapor present in air expressed as a percentage"
+          " of the amount needed for saturation."
+      ),
+      r"dew point": (
+          "The temperature to which air must be cooled to become saturated with"
+          " water vapor."
+      ),
+      r"vorticity": (
+          "A measure of the local rotation or spin of air particles in the"
+          " atmosphere."
+      ),
+      r"frontogenesis": (
+          "The atmospheric process of creating or strengthening a weather"
+          " front."
+      ),
+      r"jet streak": (
+          "A region of maximum wind speed located along the axis of a jet"
+          " stream."
+      ),
+      r"advection": (
+          "The horizontal transfer of atmospheric properties like heat or"
+          " moisture by wind."
+      ),
+      r"CAPE": (
+        "In meteorology, CAPE stands for Convective Available Potential Energy."
+         " It measures the amount of fuel or instability available in the atmosphere"
+         " to drive developing thunderstorms. Expressed in Joules per kilogram (J/kg),"
+         " CAPE estimates the strength of vertical air updrafts; higher values signify greater storm severity potential."
+      ),
+      r"lapse rate": (
+          "The rate at which atmospheric temperature decreases with an increase"
+          " in altitude."
+      ),
+  }
+
+  for pattern_term, definition in definitions.items():
+    pattern = re.compile(rf"\b{pattern_term}\b", re.IGNORECASE)
+    # HTML title attribute shows definition as a native tooltip when hovering over text
+    text = pattern.sub(
+        f'<abbr title="{definition}" class="text-primary fw-bold"'
+        ' style="cursor: help; text-decoration: underline dotted;">\\g<0></abbr>',
+        text,
+    )
+
+  return text
+
 @app.route('/weather_game')
 def weather_game():
     mode = request.args.get('mode', 'novice')
-    region = request.args.get('region')
-    month = request.args.get('month')
+    region = request.args.get('region')  
+    month = request.args.get('month')    
     risk_level = request.args.get('risk', 'Slight Risk')
     
     if not region or not month:
-        return render_template('forecast.html', setup_mode=True, mode=mode)
+        return render_template('forecast.html', setup_mode=True, mode=mode, states=STATES)
         
-    if (session.get('current_weather_location') == region and 
-        session.get('current_weather_time', '').endswith(month) and 
-        'active_scenario' in session):
-        current_scenario = session['active_scenario']
-    else:
-        current_scenario = generate_ai_weather_scenario(region, month, risk_level)
-        session['active_scenario'] = current_scenario
-    
+    # 2. Pass the mode through here so the engine uses the custom rules
+    current_scenario = generate_ai_weather_scenario(region, month, risk_level, mode=mode)
+    session['active_scenario'] = current_scenario
     session['current_weather_targets'] = current_scenario['scoring_targets']
-    session['current_weather_title'] = current_scenario['title']
-    session['current_weather_briefing'] = current_scenario['briefing']
-    session['current_weather_location'] = current_scenario['location']
-    session['current_weather_time'] = current_scenario['time_of_day']
-    session['current_weather_map'] = current_scenario.get('historical_map_url', '')
     session.modified = True
 
-    display_scenario = copy.deepcopy(current_scenario)
-    
-    display_scenario['briefing'] = link_meteorological_terms(display_scenario['briefing'])
-    for k in ['sky_look', 'instruments', 'environment']:
-        display_scenario['modes']['novice'][k] = link_meteorological_terms(display_scenario['modes']['novice'][k])
-    for k in ['discussion', 'dynamics', 'surface_obs']:
-        display_scenario['modes']['experienced'][k] = link_meteorological_terms(display_scenario['modes']['experienced'][k])
+    for k, v in current_scenario['observable_conditions'].items():
+        current_scenario['observable_conditions'][k] = link_meteorological_terms(v)
 
-    return render_template('forecast.html', scenario=display_scenario, mode=mode, setup_mode=False)
-   
-# --- ROUTE 2: THE FORM PROCESSING ENGINE ---
-@app.route('/verify_forecast', methods=['POST'])
+    return render_template('forecast.html', scenario=current_scenario, mode=mode, states=STATES, setup_mode=False)
+
+@app.route('/verify_forecast', methods=['GET', 'POST'])
 def verify_forecast():
-    user_guess = {
-        'alert_type': request.form.get('alert_type'),
-        'lead_time': request.form.get('lead_time', 0),
-        'hail_size': request.form.get('hail_size'),
-        'wind_speed': request.form.get('wind_speed')
+    if request.method == 'GET':
+        return redirect(url_for('weather_game'))
+
+    scenario = session.get('active_scenario', {})
+    targets = session.get('current_weather_targets', {})
+
+    # 1. Capture Form Inputs
+    user_guesses = {
+        'precip_type': request.form.get('precip_type', 'none'),
+        'precip_amount': request.form.get('precip_amount', 'none'),
+        'temp_range': request.form.get('temp_range', 'none'),
+        'wind_profile': request.form.get('wind_profile', 'none'),
+        'instability_cape': request.form.get('instability_cape', 'stable')
     }
-    
-    scoring_targets = session.get('current_weather_targets', {
-        "correct_alert": "none", "ideal_lead_time": 0, "hail_magnitude": "none", "wind_magnitude": "none"
-    })
-    
-    current_scenario = {
-        "title": session.get('current_weather_title', 'Dynamic Scenario'),
-        "briefing": session.get('current_weather_briefing', ''),
-        "location": session.get('current_weather_location', 'Local'),
-        "time_of_day": session.get('current_weather_time', 'N/A'),
-        "historical_map_url": session.get('current_weather_map', '')
+
+    # 2. Score Calculation Engine
+    score_data = calculate_weather_score(user_guesses, targets)
+    total_score = score_data['total']
+    breakdown = score_data['breakdown']
+
+    # 3. Formatted Value Display
+    display_user = {
+        'precip_type': format_parameter_display('precip_type', user_guesses.get('precip_type')),
+        'precip_amount': format_parameter_display('precip_amount', user_guesses.get('precip_amount'), user_guesses.get('precip_type')),
+        'temp_range': format_parameter_display('temperature', user_guesses.get('temp_range')),
+        'wind_profile': format_parameter_display('wind_profile', user_guesses.get('wind_profile')),
+        'instability_cape': user_guesses.get('instability_cape', 'stable').replace('_', ' ').title()
     }
-    
-    results = calculate_weather_score(user_guess, scoring_targets)
-    
-    # BULLETPROOF RESOLUTION UNIT CHECK: Values <= 12 denote Hours. Larger integers denote Minutes.
-    is_hourly_event = int(scoring_targets.get('ideal_lead_time', 0)) <= 12
-    time_unit = "Hours" if is_hourly_event else "Minutes"
-    
-    friendly_targets = {
-        'alert': scoring_targets['correct_alert'].replace('_', ' ').title(),
-        'lead_time': f"{scoring_targets['ideal_lead_time']} {time_unit}",
-        'hail': str(scoring_targets['hail_magnitude']).replace('_', ' ').title(),
-        'wind': str(scoring_targets['wind_magnitude']).replace('_', ' ').title()
+
+    display_actual = {
+        'precip_type': format_parameter_display('precip_type', targets.get('correct_precip_type')),
+        'precip_amount': format_parameter_display('precip_amount', targets.get('correct_precip_amount'), targets.get('correct_precip_type')),
+        'temp_range': format_parameter_display('temperature', targets.get('correct_temperature')),
+        'wind_profile': format_parameter_display('wind_profile', targets.get('correct_wind_profile')),
+        'instability_cape': targets.get('correct_cape', 'stable').replace('_', ' ').title()
     }
-    
+
+# 4. Clean Python Dictionary (NO HTML CODE HERE)
+    verification_rows = [
+        {
+            'param_name': 'Precipitation Type',
+            'glossary_letter': 'p',
+            'user_val': display_user['precip_type'],
+            'actual_val': display_actual['precip_type'],
+            'raw_score': breakdown.get('precip_type_score', 0),
+            'narrative': f"Forecasted {display_user['precip_type']} vs actual verified {display_actual['precip_type']} regime."
+        },
+        {
+            'param_name': 'Precipitation Amount (QPF)',
+            'glossary_letter': 'q',
+            'user_val': display_user['precip_amount'],
+            'actual_val': display_actual['precip_amount'],
+            'raw_score': breakdown.get('precip_amount_score', 0),
+            'narrative': f"QPF/Accumulation model verified at {display_actual['precip_amount']}."
+        },
+        {
+            'param_name': 'Temperature Range',
+            'glossary_letter': 't',
+            'user_val': display_user['temp_range'],
+            'actual_val': display_actual['temp_range'],
+            'raw_score': breakdown.get('temp_score', 0),
+            'narrative': f"Thermal advection maintained boundary temps within {display_actual['temp_range']}."
+        },
+        {
+            'param_name': 'Wind Profile & Kinematics',
+            'glossary_letter': 'w',
+            'user_val': display_user['wind_profile'],
+            'actual_val': display_actual['wind_profile'],
+            'raw_score': breakdown.get('wind_score', 0),
+            'narrative': f"Surface wind shear dynamics peaked at {display_actual['wind_profile']}."
+        },
+        {
+            'param_name': 'Atmospheric Instability (CAPE)',
+            'glossary_letter': 'c',
+            'user_val': display_user['instability_cape'],
+            'actual_val': display_actual['instability_cape'],
+            'raw_score': breakdown.get('cape_score', 0),
+            'narrative': f"Thermodynamic forcing verified at {display_actual['instability_cape']} instability."
+        }
+    ]
+
     return render_template(
-        'results.html', 
-        scenario=current_scenario, 
-        results=results, 
-        targets=friendly_targets,
-        scenario_id=999,
-        scores={}
+        'results.html',
+        results={'total': total_score, 'breakdown': breakdown},
+        verification_rows=verification_rows,
+        scenario=scenario,
+        targets=targets
     )
-   
+    
 # --- ---------------------------------------------------------------
 # --- END WEATHER FORECAST GAME SECTION ---
 # --- ---------------------------------------------------------------

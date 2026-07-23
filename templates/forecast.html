@@ -5,22 +5,19 @@
 {% block content %}
 <!-- LOCAL STYLE OVERRIDES FOR WEATHER GAME CONTRAST -->
 <style>
-    /* 1. Darken the unselected verification panel radio button circles */
     .form-check-input[type="radio"] {
-        border: 2px solid #212529 !important; /* Rich dark charcoal line */
+        border: 2px solid #212529 !important; 
         background-color: #ffffff !important;
         cursor: pointer;
         transition: border-color 0.15s ease-in-out;
     }
 
-    /* 2. Enhance selected inner-dot focus and solid operational blue fill */
     .form-check-input[type="radio"]:checked {
         background-color: #0d6efd !important; 
         border-color: #0a58ca !important;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
     
-    /* 3. Style the non-linear slider track thumb to look sharp */
     input[type="range"] {
         cursor: pointer;
     }
@@ -37,215 +34,200 @@
 
 <body class="bg-light">
 
-<div class="container py-4">
+<div class="container pt-0 pb-1">
 
     {% if setup_mode %}
-    <!-- Initialization Mode (Remains consistent) -->
-    <div class="row justify-content-center py-5">
+    <!-- Initialization Mode -->
+    <div class="row justify-content-center pt-1 pb-2">
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm border-secondary">
-                <div class="card-header bg-dark text-white fw-bold d-flex align-items-center">
-                    <span>📡 NWS Mesoscale Initialization Terminal</span>
+                <div class="card-header bg-primary text-white fw-bold d-flex align-items-center">
+                    <span>📡 NWS Mesoscale Observation Initialization</span>
                 </div>
-                <div class="card-body bg-white p-4">
+                <div class="card-body bg-white p-3">
                     <p class="text-muted small">Configure regional coordinates and seasonal bounds to establish your live telemetry link.</p>
                     <hr>
-                    <form action="/weather_game" method="GET">
-                        <input type="hidden" name="mode" value="{{ mode }}">
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-secondary small">Target Forecast Domain:</label>
-                            <select class="form-select" name="region" required>
-                                <option value="Midwest Dryline Boundary" selected>Midwest / Great Plains (Dryline Setup)</option>
-                                <option value="Southeast Gulf Coast">Southeast / Gulf Coast (Tropical Moisture)</option>
-                                <option value="Mid-Atlantic Valley Region">Mid-Atlantic Region (High Shear / Terrain)</option>
-                                <option value="Desert Southwest Monsoonal">Desert Southwest (Convective Microbursts)</option>
-                            </select>
-                        </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-secondary small">Climatological Month:</label>
-                            <select class="form-select" name="month" required>
-                                <option value="April">April (Early Season Volatility)</option>
-                                <option value="June" selected>June (Peak Summer Solstice)</option>
-                                <option value="August">August (Late Summer Diurnal)</option>
-                                <option value="October">October (Secondary Transitional Autumn)</option>
-                                <option value="December">December (Early Winter / Deep Synoptic Lows)</option>
-                                <option value="February">February (Late Winter / Sub-Zero Arctic Outbreaks)</option>
-                            </select>
-                        </div>
+<form action="/weather_game" method="GET">
+		<!-- State Selection -->
+		<div class="mb-3">
+			<label class="form-label fw-bold text-secondary small">Target Forecast Domain:</label>
+			<select class="form-select" name="region" required>
+				<option value="" disabled>Select a state...</option>
+				{% for state in states %}
+					<option value="{{ state }}" {% if state == "Virginia" %}selected{% endif %}>{{ state }}</option>
+				{% endfor %}
+			</select>
+		</div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-grow-1 fw-bold py-2">
-                                OBSERVE CURRENT ATMOSPHERIC CONDITIONS
-                            </button>
-                            <a href="/" class="btn btn-outline-secondary py-2">Cancel</a>
-                        </div>
-                    </form>
+		<!-- Month Selection -->
+		<div class="mb-3">
+			<label class="form-label fw-bold text-secondary small">Climatological Month:</label>
+			<select class="form-select" name="month" required>
+				<option value="January">January</option>
+				<option value="February">February</option>
+				<option value="March">March</option>
+				<option value="April">April</option>
+				<option value="May">May</option>
+				<option value="June" selected>June</option>
+				<option value="July">July</option>
+				<option value="August">August</option>
+				<option value="September">September</option>
+				<option value="October">October</option>
+				<option value="November">November</option>
+				<option value="December">December</option>
+			</select>
+		</div>
+
+		<!-- Mode Selection Preceding the Observation Button -->
+		<div class="mb-4">
+			<label class="form-label fw-bold text-secondary small d-block">Mode Selection:</label>
+			<div class="btn-group w-100" role="group" aria-label="Mode selection">
+				<input type="radio" class="btn-check" name="mode" id="mode_novice" value="novice" {% if mode != 'experienced' %}checked{% endif %}>
+				<label class="btn btn-outline-success fw-bold" for="mode_novice">🌱 Novice Mode</label>
+
+				<input type="radio" class="btn-check" name="mode" id="mode_experienced" value="experienced" {% if mode == 'experienced' %}checked{% endif %}>
+				<label class="btn btn-outline-danger fw-bold" for="mode_experienced">⚡ Experienced Mode</label>
+			</div>
+		</div>
+
+		<div class="d-flex gap-2">
+			<button type="submit" class="btn btn-primary flex-grow-1 fw-bold py-2">
+				OBSERVE CURRENT ATMOSPHERIC CONDITIONS
+			</button>
+			<a href="/" class="btn btn-outline-secondary py-2">Cancel</a>
+		</div>
+	</form>
+    <!-- Closing setup card and grid containers -->
                 </div>
             </div>
         </div>
     </div>
 
     {% else %}
-    <!-- Active Forecasting Dashboard Desk -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-        <div>
-            <h1 class="h3 mb-0">Diverse Weather Forecast Desk</h1>
-            <small class="text-muted">{{ scenario.location }} — {{ scenario.time_of_day }}</small>
-        </div>
-        <div>
-            <span class="me-2 fw-bold">Current Mode:</span>
-            {% if mode == 'novice' %}
-                <span class="badge bg-success p-2">Novice Weather Guesser</span>
-                <a href="?mode=experienced&region={{ scenario.location }}&month=Winter" class="btn btn-sm btn-outline-secondary ms-2">Switch to Professional</a>
-            {% else %}
-                <span class="badge bg-danger p-2">Experienced Forecaster</span>
-                <a href="?mode=novice&region={{ scenario.location }}&month=Winter" class="btn btn-sm btn-outline-secondary ms-2">Switch to Novice</a>
-            {% endif %}
-        </div>
-    </div>
+	<!-- Active Forecasting Dashboard Desk -->
+	<div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+		<div>
+			<h1 class="h3 mb-0">Diverse Weather Forecast Desk</h1>
+			<small class="text-muted">{{ scenario.location }} for the month of {{ scenario.month }} — {{ scenario.time_of_day }}</small>
+		</div>
+	</div>
 
     <div class="row g-4">
-        <!-- Observations Column -->
+        <!-- Observations Column: 24 Hours Before Weather Event -->
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-dark text-white fw-bold">
-                    📡 Current Weather Observations & Soundings
-                </div>
+				<div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+					<span>📡 Pre-Event Observations (Approx. T-24 to T-36 Hours)</span>
+				</div>
                 <div class="card-body">
-                    {% if mode == 'novice' %}
-                        <h5 class="text-primary">Visual Sky Assessment</h5>
-                        <p>{{ scenario.modes.novice.sky_look | safe }}</p>
-                        
-                        <h5 class="text-primary">Backyard Instruments</h5>
-                        <p>{{ scenario.modes.novice.instruments | safe }}</p>
-                        
-                        <h5 class="text-primary">Local Environment & Sensory Signs</h5>
-                        <p>{{ scenario.modes.novice.environment | safe }}</p>
+                    <!-- Dynamic Upper Air Synopsis -->
+                    <h5 class="text-primary h6 fw-bold">🪐 Upper Air Synopsis</h5>
+                    <p class="small text-dark bg-light p-2 border rounded">{{ scenario.observable_conditions.upper_air | safe }}</p>
+                    
+                    <!-- Dynamic Visual Sky Assessment -->
+                    <h5 class="text-primary h6 fw-bold">👁️ Visual Sky Assessment</h5>
+                    <p class="small text-dark bg-light p-2 border rounded">{{ scenario.observable_conditions.visual_sky | safe }}</p>
+                    
+                    <!-- Dynamic Backyard Instruments -->
+                    <h5 class="text-primary h6 fw-bold">🌡️ Backyard Instruments</h5>
+                    <p class="small text-dark bg-light p-2 border rounded">{{ scenario.observable_conditions.backyard_instruments | safe }}</p>
+                    
+                    <!-- Dynamic Local Environment & Sensory Signs -->
+                    <h5 class="text-primary h6 fw-bold">🍃 Local Environment & Sensory Signs</h5>
+                    <p class="small text-dark bg-light p-2 border rounded">{{ scenario.observable_conditions.local_environment | safe }}</p>
+                    
+					<!-- Initial Surface Weather Chart -->
+                    <h5 class="text-primary h6 fw-bold mt-3">🗺️ Initial Surface Weather Chart</h5>
+                    {% if scenario.historical_map_url and scenario.historical_map_url != "" %}
+                        <div class="border rounded p-1 bg-white text-center">
+                            <img src="{{ scenario.historical_map_url }}" alt="Pre-Event Surface Weather Chart" class="img-fluid rounded shadow-sm" style="max-height: 350px; width: auto;">
+                        </div>
                     {% else %}
-                        <h5 class="text-danger">Thermodynamic Analysis</h5>
-                        <p>{{ scenario.modes.experienced.discussion | safe }}</p>
-                        
-                        <h5 class="text-danger">Kinematics & Synoptic Forcing</h5>
-                        <p>{{ scenario.modes.experienced.dynamics | safe }}</p>
-                        
-                        <h5 class="text-danger">Surface Boundary Observations</h5>
-                        <p>{{ scenario.modes.experienced.surface_obs | safe }}</p>
+                        <p class="text-danger small fw-bold">initial Surface Weather Chart NOT AVAILABLE</p>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Submission Controls Column -->
+        <!-- Dynamic Forecasting & Verification Panel -->
         <div class="col-md-6">
-            <form action="/verify_forecast" method="POST" class="dashboard-panel shadow-sm p-3 border rounded bg-white">
+            <form action="/verify_forecast" method="POST" class="dashboard-panel shadow-sm p-3 border rounded bg-white h-100">
                 <h4 class="mb-3 text-dark border-bottom pb-2">🎛️ Dynamic Forecasting & Verification Panel</h4>
-                
-                <!-- 1. Alert Type Options Expanded -->
-                <div class="mb-4">
-                    <label class="form-label d-block fw-bold">Identify Future Synoptic/Meso State:</label>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert1" value="none" checked>
-                        <label class="form-check-label" for="alert1">
-                            <strong>Routine / No Major Impact Expected</strong> <span class="text-muted">(General rain, clear skies, normal variations)</span>
-                        </label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert2" value="high_pressure_clear">
-                        <label class="form-check-label" for="alert2">
-                            <span class="text-success">☀️</span> <strong>Building High Pressure / Strong Clearing</strong> <span class="text-muted">(Synoptic ridge entry)</span>
-                        </label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert3" value="dense_fog_advisory">
-                        <label class="form-check-label" for="alert3">
-                            <span class="text-info">🌫️</span> <strong>Dense Fog Advisory</strong> <span class="text-muted">(Radiation/Advection cooling profiles)</span>
-                        </label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert4" value="wind_advisory">
-                        <label class="form-check-label" for="alert4">
-                            <span class="text-secondary">💨</span> <strong>Wind Advisory / Gradient Shift</strong> <span class="text-muted">(Tightening pressure gradient fields)</span>
-                        </label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="alert_type" id="alert5" value="severe_warning">
-                        <label class="form-check-label" for="alert5">
-                            <span class="text-warning">⚠️</span> <strong>Severe Thunderstorm Warning</strong> <span class="text-muted">(Convective downburst structural hazards)</span>
-                        </label>
-                    </div>
+                <p class="text-muted small mb-3">Dial in your predictive outputs for the synoptic parameters below before committing deployment transmission signatures.</p>
+
+				<!-- Parameter 1: Precipitation Type -->
+				<div class="mb-3">
+                    <label class="form-label fw-bold small text-dark">Precipitation Type Regime:</label>
+    				<select name="precip_type" class="form-select border-secondary">
+    					<option value="none">No Precipitation</option>
+    					<option value="rain">Stratiform Rain</option>
+                        <option value="convective_storms">Convective / Severe Thunderstorms</option>
+    					<option value="freezing_rain">Freezing Rain / Glaze Ice</option>
+    					<option value="sleet">Sleet / Ice Pellets</option>
+    					<option value="snow">Synoptic Snow</option>
+    				</select>
                 </div>
 
-<!-- 2. Non-Linear Timeline Slider -->
-<div class="mb-4 p-3 border rounded bg-light">
-    <label for="leadTime" class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
-        <span>⏱️ Target Event Horizon Window:</span>
-        <!-- Default text matches our starting index (0) -->
-        <span class="badge bg-primary fs-6" id="leadTimeDisplay">0 min</span>
-    </label>
-    <div class="py-2">
-        <input type="range" class="w-100" min="0" max="12" step="1" id="leadTime" value="0">
-    </div>
-    <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.85rem;">
-        <span>Immediate</span>
-        <span>Tactical (Mins)</span>
-        <span>Synoptic (Hours)</span>
-    </div>
-    <input type="hidden" id="leadTimeRaw" name="lead_time" value="0">
-</div>
+				<!-- Parameter 2: Precipitation Amount -->
+				<div class="mb-3">
+					<label class="form-label fw-bold small text-dark">Expected Precipitation Amount (QPF / Snow / Hail):</label>
+					<select name="precip_amount" class="form-select border-secondary">
+						<option value="none">0.00 in (None / Dry)</option>
+						<option value="light_less_025">Light (&lt; 0.25" Liquid / 1 - 3" Snow / Small Hail)</option>
+						<option value="moderate_025_10">Moderate (0.25" - 1.00" Liquid / 3 - 8" Snow)</option>
+						<option value="heavy_10_20">Heavy (1.00" - 2.00" Liquid / 8 - 18" Heavy Snow / Severe Hail)</option>
+						<option value="extreme_greater_20">Extreme (&gt; 2.00" Liquid / &gt; 18" Blizzard Snow)</option>
+					</select>
+				</div>
 
-<script>
-(function() {
-    // Encapsulated to prevent any global variable redeclaration collisions
-    const labels = ["0 min", "10 min", "20 min", "30 min", "40 min", "50 min", "60 min", "2 hrs", "4 hrs", "6 hrs", "8 hrs", "10 hrs", "12 hrs"];
-    const values = [0, 10, 20, 30, 40, 50, 60, 2, 4, 6, 8, 10, 12];
-
-    const slider = document.getElementById("leadTime");
-    const display = document.getElementById("leadTimeDisplay");
-    const hiddenInput = document.getElementById("leadTimeRaw");
-
-    if (slider && display && hiddenInput) {
-        slider.addEventListener("input", function () {
-            let index = parseInt(this.value);
-            display.innerText = labels[index];
-            hiddenInput.value = values[index];
-        });
-    }
-})();
-</script>
-
-                <!-- 3. Dynamic Hazard / Moisture Options Split -->
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-6">
-						<label class="form-label fw-bold small">Moisture Profile / Resulting Core Accumulation:</label>
-						<select class="form-select form-select-sm" name="hail_size">
-							<option value="none">No Precipitation / Sky Clearing</option>
-							<option value="dense_fog">Dense Radiation Fog / Near-Zero Visibility</option>
-							<option value="0.25_rain">Light Stratiform Rain (< 0.25")</option>
-							<option value="1.0_rain">Heavy Liquid Accumulation (1.0"+ Rain)</option>
-							<option value="3.0_snow">Minor Winter Accumulation (1-3" Snow)</option>
-							<option value="6.0_snow">Major Winter Storm Boundary (6.0"+ Snow)</option>
-							<option value="quarter">Severe Convective Hail - Quarter (1.00")</option>
-							<option value="golf_ball">Severe Convective Hail - Golf Ball (1.75"+)</option>
-						</select>
-					</div>
-                    <div class="col-sm-6">
-                        <label class="form-label fw-bold small">Wind Profile / Gradient Vector:</label>
-                        <select class="form-select form-select-sm" name="wind_speed">
-                            <option value="none">Light/Calm (Sub-Severe)</option>
-                            <option value="southwesterly_breeze">Southwesterly Winds (Tight Gradient)</option>
-                            <option value="northwesterly_gales">Northwesterly Gales (Advective Cold Front)</option>
-                            <option value="60mph">60 mph Severe Convective Gusts</option>
-                            <option value="70mph">70+ mph Destructive Downbursts</option>
-                        </select>
-                    </div>
+                <!-- Parameter 3: Temperature Forecast Range -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-dark">Temperature Forecast Range:</label>
+                    <select name="temp_range" class="form-select border-secondary" required>
+                        <option value="" disabled selected>Select expected temperature bound...</option>
+                        <option value="below_freezing">Below Freezing (&lt; 32°F)</option>
+                        <option value="cool_32_50">Cool / Crisp (32°F - 50°F)</option>
+                        <option value="mild_50_70">Mild (50°F - 70°F)</option>
+                        <option value="warm_70_85">Warm (70°F - 85°F)</option>
+                        <option value="hot_85_plus">Hot (&gt; 85°F)</option>
+                    </select>
                 </div>
+
+				<!-- Parameter 4: Wind Profile Options -->
+				<div class="mb-3">
+                    <label class="form-label fw-bold small text-dark">Boundary Layer Wind Profile & Kinematics:</label>
+    				<select name="wind_profile" class="form-select border-secondary">
+    					<option value="light_less_10">Light Winds (&lt; 10 knots)</option>
+    					<option value="moderate_10_25">Moderate Breezes (10 - 25 knots)</option>
+    					<option value="strong_25_40">Strong / Near Gale (25 - 40 knots)</option>
+    					<option value="severe_gales_40_64">Severe Gales / Storm Force (40 - 64 knots)</option>
+                        <option value="hurricane_force_greater_64">Hurricane Force Winds (&gt; 64 knots)</option>
+    				</select>
+                </div>
+
+				<!-- Parameter 5: Instability Boundary -->
+				<div class="mb-4">
+					<label class="form-label fw-bold small">
+						⚡ Instability State (
+						<abbr title="In meteorology, CAPE stands for Convective Available Potential Energy. It measures the amount of fuel or instability available in the atmosphere to drive developing thunderstorms. Expressed in Joules per kilogram (J/kg), CAPE estimates the strength of vertical air updrafts; higher values signify greater storm severity potential." 
+							  class="text-primary fw-bold" 
+							  style="cursor: help; text-decoration: underline dotted;">
+							CAPE
+						</abbr> 
+						/ Energy Field):
+					</label>
+					<select class="form-select form-select-sm border-secondary" name="instability_cape">
+						<option value="stable">Stable Profile (0 J/kg - High CIN)</option>
+						<option value="marginal">Marginally Unstable (100 - 1000 J/kg)</option>
+						<option value="highly_unstable">Highly Extreme Thermal Forcing (2500+ J/kg)</option>
+					</select>
+				</div>
 
                 <!-- Form Controls Execution -->
-                <div class="mt-4 d-flex gap-2">
+                <div class="mt-auto d-flex gap-2 pt-2 border-top">
                     <button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-bold">
-                        TRANSMIT FORECAST
+                        TRANSMIT FORECAST FOR VERIFICATION
                     </button>
                     <a href="/" class="btn btn-danger py-2 px-4 fw-bold">Quit</a>
                 </div>
@@ -271,39 +253,6 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Unified Glossary Script -->
-<script>
-fetch("/static/wx-glossary.json")
-  .then(response => response.json())
-  .then(glossary => {
-      document.querySelectorAll('.glossary-term').forEach(term => {
-          const key = term.dataset.term;
-          term.setAttribute("data-bs-toggle", "tooltip");
-          term.setAttribute("data-bs-title", glossary[key] || "Definition not found");
-      });
-
-      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-      [...tooltipTriggerList].forEach(el => new bootstrap.Tooltip(el));
-
-      document.querySelectorAll('.glossary-term').forEach(item => {
-          item.addEventListener('click', function(e) {
-              e.preventDefault();
-              const rawTerm = this.getAttribute('data-term');
-              if (!rawTerm) return;
-
-              const termKey = rawTerm.trim();
-              const lookupValue = glossary[termKey] || glossary[termKey.toLowerCase()] || "Definition not found";
-
-              document.getElementById('glossaryTitle').innerText = termKey;
-              document.getElementById('glossaryBody').innerHTML = lookupValue;
-
-              const modal = new bootstrap.Modal(document.getElementById('glossaryModal'));
-              modal.show();
-          });
-      });
-  });
-</script>
 
 </body>
 </html>

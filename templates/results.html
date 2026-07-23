@@ -6,6 +6,7 @@
   <title>Game Results</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    /* RESTORED ALL YOUR ORIGINAL MOBILE RESPONSIVE LAYOUT OVERRIDES */
     @media (max-width: 600px) {
       body {
         margin: 20px !important;
@@ -85,8 +86,9 @@
     }
   </style>
 </head>
-<body style="font-family: Arial, sans-serif; margin: 40px; color: #333;">
+<body style="font-family: Arial, sans-serif; margin: 40px; color: #333;" class="bg-light">
 
+  <!-- 1. MULTIPLAYER TEAM SCORES / LEADERBOARD STATE ENGINE -->
   {% if scores %}
     <h1 style="color: #333; margin: 0; padding: 0; font-family: Arial, sans-serif;">Final Scores</h1>
     {% if winner %}
@@ -109,8 +111,10 @@
     </div>
 
   {% else %}
-    <div class="container mx-auto" style="max-width: 900px; padding-top: 20px;">
+    <!-- SINGLE PLAYER / SHIFT PERFORMANCE VIEW -->
+    <div class="container mx-auto" style="max-width: 950px; padding-top: 20px;">
       
+      <!-- Operational Scoring Header & Rank Assessment -->
       <div class="card shadow-sm mb-4 border-0">
           <div class="card-body text-center p-4 bg-dark text-white rounded">
               <h1 class="display-5 fw-bold mb-1" style="color: #ffc107 !important;">
@@ -118,97 +122,126 @@
               </h1>
               <h3 class="h5 fw-light mt-2 text-white">
                   {% if results.total >= 90 %}
-                      🌟 Outstanding! Lead MIC Meteorologist Rating.
+                      🌟 Outstanding! Lead MIC Meteorologist Forecast Accuracy.
                   {% elif results.total >= 75 %}
-                      ✅ Good Forecast! WFO Journeyman Rating.
+                      ✅ Good Forecast! WFO Journeyman Model Alignment.
                   {% elif results.total >= 50 %}
-                      ⚠️ Marginal Assessment. Keep practicing your model analysis.
+                      ⚠️ Marginal Assessment. Model variances deviated significantly from ground truth.
                   {% else %}
-                      🛑 Critical Warning Failure. The public was caught unprepared.
+                      🛑 Poor Model Correlation. Synoptic patterns completely decoupled from actual conditions.
                   {% endif %}
               </h3>
           </div>
       </div>
 
-      <div class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-primary text-white fw-bold">🌪️ Event Ground Truth (What Actually Happened)</div>
-          <div class="card-body bg-white border">
-              <p class="lead mb-0 text-secondary" style="font-size: 1.15rem;">"{{ scenario.briefing }}"</p>
-              
-              <hr class="my-3">
-              <h6 class="fw-bold text-dark mb-3">Optimal Target Settings:</h6>
-              <div class="row g-2 text-start">
-                  <div class="col-sm-6 mb-1"><strong>Required Alert Level:</strong> <span class="badge bg-secondary p-2">{{ targets.alert }}</span></div>
-                  <div class="col-sm-6 mb-1"><strong>Ideal Onset Margin:</strong> <span class="badge bg-secondary p-2">{{ targets.lead_time }}</span></div>
-                  <div class="col-sm-6 mb-1"><strong>Target Hail Limit:</strong> <span class="badge bg-secondary p-2">{{ targets.hail }}</span></div>
-                  <div class="col-sm-6 mb-1"><strong>Peak Sustained Winds:</strong> <span class="badge bg-secondary p-2">{{ targets.wind }}</span></div>
-              </div>
-          </div>
-      </div>
+<!-- Event Ground Truth in a Single Unified Responsive Verification Table -->
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>🚨 Event Ground Truth & Parameter Verification</span>
+        <span class="badge bg-dark rounded-pill fs-6">{{ results.total }} / 100</span>
+    </div>
+    <div class="card-body bg-white border p-0">
+        <div class="p-3 bg-light border-bottom">
+            <h6 class="fw-bold text-dark mb-1">Actual Weather Event Summary (24 to 36 Hours Later):</h6>
+            <p class="lead mb-0 text-muted fw-semibold" style="font-size: 1rem;">"{{ targets.actual_weather_event }}"</p>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-start" style="font-size: 0.95rem;">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" style="width: 40%;">Parameter & Operational Analysis</th>
+                        <th scope="col" style="width: 30%;">Your Submission</th>
+                        <th scope="col" style="width: 30%;">Verified Target</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in verification_rows %}
+                    <tr>
+                  <td>
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<strong>{{ row.param_name }}</strong>
+						<span class="badge bg-primary text-white ms-2">{{ row.raw_score }} / 20</span>
+					</div>
+					<small class="text-muted d-block mt-1" style="font-size: 0.85rem; line-height: 1.3;">
+						💡 <em>{{ row.narrative }}</em>
+					</small>
+                  </td>    
+						<td>
+                            <span class="badge bg-light text-dark border p-2 w-100 text-wrap text-start">
+                                {{ row.user_val }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary p-2 w-100 text-wrap text-start">
+                                {{ row.actual_val }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-      <!-- MAIN PERFORMANCE ANALYSIS SECTION WITH MAP GRID -->
-      <div class="card shadow-sm mb-4 border-0">
-          <div class="card-header bg-secondary text-white fw-bold">📊 Forecast vs Actual Weather Event</div>
-          <div class="card-body p-0 bg-white border">
-              <div class="row g-0">
-                  <!-- Left Side: Performance Metrics Breakdown -->
-                  <div class="col-md-7 border-end">
-                      <ul class="list-group list-group-flush">
-                          <li class="list-group-item d-flex justify-content-between align-items-start p-3 border-0 border-bottom">
-                              <div class="me-auto">
-                                  <div class="fw-bold">Alert Selection Evaluation</div>
-                                  <small class="text-muted d-block mt-1">{{ results.alert.feedback }}</small>
-                              </div>
-                              <span class="badge bg-dark rounded-pill">{{ results.alert.score }} / 40</span>
-                          </li>
-                          <li class="list-group-item d-flex justify-content-between align-items-start p-3 border-0 border-bottom">
-                              <div class="me-auto">
-                                  <div class="fw-bold">Event Onset Timing</div>
-                                  <small class="text-muted d-block mt-1">{{ results.lead_time.feedback }}</small>
-                              </div>
-                              <span class="badge bg-dark rounded-pill">{{ results.lead_time.score }} / 30</span>
-                          </li>
-                          <li class="list-group-item d-flex justify-content-between align-items-start p-3 border-0">
-                              <div class="me-auto">
-                                  <div class="fw-bold">Core Hazard Classification</div>
-                                  <small class="text-muted d-block mt-1">{{ results.magnitude.feedback }}</small>
-                              </div>
-                              <span class="badge bg-dark rounded-pill">{{ results.magnitude.score }} / 30</span>
-                          </li>
-                      </ul>
+<!-- Side-by-Side Synoptic Weather Chart Verification Blocks -->
+      <div class="row g-4 mb-4">
+          <!-- Pre-Event Map -->
+          <div class="col-md-6">
+              <div class="card shadow-sm h-100 border-0">
+                  <div class="card-header bg-secondary text-white fw-bold text-center py-2" style="font-size: 0.85rem;">
+                      🗺️ PRE-EVENT INITIALIZATION MAP (T-36 to T-24)
                   </div>
-				<!-- Right Side: Historical Synoptic Archive Conditions Chart -->
-                  <div class="col-md-5 d-flex flex-column bg-light p-3 justify-content-center align-items-center">
-                      <div class="w-100 text-center mb-2">
-                          <span class="badge bg-dark w-100 py-2" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                              HISTORICAL INITIALIZATION MAP
-                          </span>
-                      </div>
-                      <div class="border rounded bg-white p-1 shadow-sm position-relative overflow-hidden w-100 d-flex justify-content-center align-items-center" style="height: 220px;">
-                          <!-- Renders the True Historical Chart matching the data frame timestamp -->
+                  <div class="card-body bg-white border text-center p-2 d-flex flex-column align-items-center justify-content-center" style="min-height: 280px;">
+                      {% if scenario.historical_map_url and scenario.historical_map_url != "" %}
                           <img src="{{ scenario.historical_map_url }}" 
-                               alt="Historical Surface Analysis Chart" 
-                               class="img-fluid" 
-                               onerror="this.onerror=null; this.src='https://www.wpc.ncep.noaa.gov/sfc/usfntsfc.gif'; document.getElementById('map-fallback-alert').style.display='block';"
-                               style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                               alt="Historical Pre-Event Surface Chart" 
+                               class="img-fluid rounded border mb-2" 
+                               onerror="this.style.display='none'; document.getElementById('map-fallback-1').classList.remove('d-none');"
+                               style="max-height: 220px; width: auto; object-fit: contain;">
+                      {% endif %}
+                      <div id="map-fallback-1" class="text-center {% if scenario.historical_map_url and scenario.historical_map_url != '' %}d-none{% endif %}">
+                          <p class="text-danger fw-bold m-0" style="font-size: 1rem;">Initial Surface Weather Chart NOT AVAILABLE</p>
                       </div>
-                      <div id="map-fallback-alert" class="w-100 text-center mt-1" style="display: none;">
-                          <small class="text-danger fw-bold" style="font-size: 0.7rem;">⚠️ Chart archived in full database format below.</small>
-                      </div>
-                      <div class="w-100 text-center mt-2">
-                          <a href="https://www.wpc.ncep.noaa.gov/archives/web_pages/sfc/sfc_archive_maps.php" 
-                             target="_blank" 
-                             class="btn btn-sm btn-outline-secondary w-100 fw-bold" 
-                             style="font-size: 0.75rem;">
-                             🔍 Open NOAA WPC Map Archive Browser
-                          </a>
+                  </div>
+              </div>
+          </div>
+          
+          <!-- Ground Truth Map -->
+          <div class="col-md-6">
+              <div class="card shadow-sm h-100 border-0">
+                  <div class="card-header bg-success text-white fw-bold text-center py-2" style="font-size: 0.85rem;">
+                      🎯 ACTUAL SURFACE WEATHER CHART FOR FORECASTED PERIOD (T-0)
+                  </div>
+                  <div class="card-body bg-white border text-center p-2 d-flex flex-column align-items-center justify-content-center" style="min-height: 280px;">
+                      {% if scenario.ground_truth_map_url and scenario.ground_truth_map_url != "" %}
+                          <img src="{{ scenario.ground_truth_map_url }}" 
+                               alt="Actual Ground Truth Surface Chart" 
+                               class="img-fluid rounded border mb-2" 
+                               onerror="this.style.display='none'; document.getElementById('map-fallback-2').classList.remove('d-none');"
+                               style="max-height: 220px; width: auto; object-fit: contain;">
+                      {% endif %}
+                      <div id="map-fallback-2" class="text-center {% if scenario.ground_truth_map_url and scenario.ground_truth_map_url != '' %}d-none{% endif %}">
+                          <p class="text-danger fw-bold m-0" style="font-size: 1rem;">Actual Surface Weather Chart NOT AVAILABLE</p>
                       </div>
                   </div>
               </div>
           </div>
       </div>
+	  
+      <!-- External NOAA WPC Map Archive Integration Tool -->
+      <div class="card shadow-sm mb-4 border-0 bg-light p-2 text-center">
+          <a href="https://www.wpc.ncep.noaa.gov/archives/web_pages/sfc/sfc_archive_maps.php" 
+             target="_blank" 
+             class="btn btn-sm btn-outline-secondary mx-auto fw-bold w-50" 
+             style="font-size: 0.8rem;">
+             🔍 Open NOAA WPC Map Archive Browser
+          </a>
+      </div>
 
-      <div class="d-flex justify-content-between pt-3 mt-4">
+      <!-- Navigation Footer -->
+      <div class="d-flex justify-content-between pt-2">
           <a href="/weather_game" class="btn btn-primary px-4 py-2 fw-bold text-decoration-none">➡️ Next Operational Shift</a>
           <a href="/" class="btn btn-outline-secondary px-4 py-2 fw-bold text-decoration-none">🏠 Hub Menu</a>
       </div>
