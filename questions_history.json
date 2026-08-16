@@ -287,6 +287,38 @@
       "subsubtopic": "replace",
       "difficulty": "experienced",
       "timestamp": "2026-05-21T16:38:18.711860"
+    },
+    {
+      "question": "Is using a miter saw with a fine-tooth blade the best method for achieving clean, precise cuts in hardwood during woodworking projects?",
+      "category": "tools",
+      "subtopic": "wood working",
+      "subsubtopic": "cutting",
+      "difficulty": "beginner",
+      "timestamp": "2026-08-16T14:56:04.796657"
+    },
+    {
+      "question": "What hand tool is essential for achieving precise, clean cuts in woodworking projects?",
+      "category": "tools",
+      "subtopic": "hand",
+      "subsubtopic": "wood working",
+      "difficulty": "beginner",
+      "timestamp": "2026-08-16T14:56:40.489344"
+    },
+    {
+      "question": "What is the best way to maintain your washing machine to prevent mold and odors?",
+      "category": "appliances",
+      "subtopic": "washing machine",
+      "subsubtopic": "care",
+      "difficulty": "beginner",
+      "timestamp": "2026-08-16T15:33:35.450047"
+    },
+    {
+      "question": "What is the best method to clean and protect car upholstery for long-lasting results?",
+      "category": "auto",
+      "subtopic": "detailing",
+      "subsubtopic": "apholstery",
+      "difficulty": "beginner",
+      "timestamp": "2026-08-16T15:39:08.554849"
     }
   ],
   "used_subtopics": {
@@ -295,7 +327,8 @@
       "maintenance|brakes",
       "maintenance|rattles",
       "detailing|washing",
-      "detailing|waxing"
+      "detailing|waxing",
+      "detailing|apholstery"
     ],
     "yard": [
       "lawn|new and existing"
@@ -329,7 +362,8 @@
     "appliances": [
       "dishwasher|issues",
       "dishwasher|care",
-      "washing machine|issues"
+      "washing machine|issues",
+      "washing machine|care"
     ],
     "cooking": [
       "dinners|easy",
@@ -346,7 +380,9 @@
       "brick|cleaning"
     ],
     "tools": [
-      "garden|equipment"
+      "garden|equipment",
+      "wood working|cutting",
+      "hand|wood working"
     ]
   }
 }
